@@ -1,6 +1,7 @@
 package ro.uvt.regisb.magpie;
 
 import javax.swing.*;
+import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
@@ -21,11 +22,13 @@ public class PlayerGui extends JFrame {
     private JComboBox currentMoodBox;
     private JList timeSlotList;
     private JLabel timeSlotLabel;
-    private JButton timeSlotEditButton;
+    private JButton timeSlotNewButton;
     private JList processesList;
-    private JButton processesEditButton;
+    private JButton processesNewButton;
     private JLabel processesLabel;
-    private JLabel infoLabel;
+    private JLabel infoLabel; // todo hide after set amount of time
+    private JButton timeSlotDeleteButton;
+    private JButton processesDeleteButton;
     private String onStopPressed;
 
     protected PlayerAgent owner;
@@ -35,6 +38,7 @@ public class PlayerGui extends JFrame {
 
         this.owner = owner;
 
+        // Adding components missing from the IntelliJ GUI designer.
         JMenuBar menuBar = new JMenuBar();
         JMenu fileMenu = new JMenu("File");
         JMenuItem exitItem = new JMenuItem(new AbstractAction("Quit") {
@@ -47,6 +51,11 @@ public class PlayerGui extends JFrame {
         menuBar.add(fileMenu);
         setJMenuBar(menuBar);
 
+        // Changing default icon.
+        setIconImage(Toolkit.getDefaultToolkit().getImage(getClass().getResource("/magpie_icon.png")));
+
+
+        // Adding events listener.
         playList.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
@@ -58,16 +67,20 @@ public class PlayerGui extends JFrame {
                 }
             }
         });
-
-        setSize(400, 200);
-        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setContentPane(panel1);
-        currentMoodBox.addActionListener(new ActionListener() {
+        currentMoodBox.addActionListener(new ActionListener() { // Change global mood on configuration change.
             public void actionPerformed(ActionEvent e) {
                 assert currentMoodBox.getSelectedItem() != null;
                 owner.broadcastNewMood(currentMoodBox.getSelectedItem().toString());
             }
         });
+        // TODO add Play button event listener
+        // TODO Play music at current playList index
+        // TODO ask PlaylistManager to download more if playing last element of the playlist
+        // TODO ask PlaylistManager to download if playList is empty
+
+        // Final graphic setup.
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setContentPane(panel1);
         pack();
     }
 

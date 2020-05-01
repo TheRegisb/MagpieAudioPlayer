@@ -1,0 +1,9 @@
+<component name="ArtifactManager">
+  <artifact type="jar" name="magpie:jar">
+    <output-path>$PROJECT_DIR$/out/artifacts/magpie_jar</output-path>
+    <root id="archive" name="magpie.jar">
+      <element id="module-output" name="magpie" />
+      <element id="extracted-dir" path="$MAVEN_REPOSITORY$/com/tilab/jade/jade/4.5.0/jade-4.5.0.jar" path-in-jar="/" />
+    </root>
+  </artifact>
+</component>
