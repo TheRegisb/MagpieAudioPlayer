@@ -25,10 +25,15 @@ public class PlayerGui extends JFrame {
     private JList processesList;
     private JButton processesEditButton;
     private JLabel processesLabel;
+    private JLabel infoLabel;
     private String onStopPressed;
 
-    public PlayerGui() {
+    protected PlayerAgent owner;
+
+    public PlayerGui(final PlayerAgent owner) {
         super("Magpie Audio Player");
+
+        this.owner = owner;
 
         JMenuBar menuBar = new JMenuBar();
         JMenu fileMenu = new JMenu("File");
@@ -57,9 +62,20 @@ public class PlayerGui extends JFrame {
         setSize(400, 200);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setContentPane(panel1);
+        currentMoodBox.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                assert currentMoodBox.getSelectedItem() != null;
+                owner.broadcastNewMood(currentMoodBox.getSelectedItem().toString());
+            }
+        });
+        pack();
     }
 
-    public JPanel getMainPanel() {
-        return panel1;
+    JComboBox getCurrentMoodBox() {
+        return currentMoodBox;
+    }
+
+    JLabel getInfoLabel() {
+        return infoLabel;
     }
 }
