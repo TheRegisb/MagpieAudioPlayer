@@ -55,7 +55,9 @@ public class PreferencesAgent extends Agent {
     }
 
     protected void changeCurrentMood(String mood) {
-        System.out.println("Prefs: mood is " + mood);
         magpiePrefs.put("mood", mood);
+        // TODO notifiy the MoodAgent
     }
+
+    // TODO add procs watchlist and time slot
 }

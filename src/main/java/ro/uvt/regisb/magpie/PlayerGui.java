@@ -1,11 +1,15 @@
 package ro.uvt.regisb.magpie;
 
+import javafx.scene.media.Media;
+import javafx.scene.media.MediaPlayer;
+
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.io.File;
 
 public class PlayerGui extends JFrame {
     // From the .form
@@ -32,6 +36,7 @@ public class PlayerGui extends JFrame {
     private String onStopPressed;
 
     protected PlayerAgent owner;
+    protected MediaPlayer mediaPlayer = null;
 
     public PlayerGui(final PlayerAgent owner) {
         super("Magpie Audio Player");
@@ -54,16 +59,22 @@ public class PlayerGui extends JFrame {
         // Changing default icon.
         setIconImage(Toolkit.getDefaultToolkit().getImage(getClass().getResource("/magpie_icon.png")));
 
-
         // Adding events listener.
+
         playList.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
                 super.mouseClicked(e);
 
                 if (e.getClickCount() == 2) {
-                    // TODO replay selected music
-                    // ((JList)e.getSource()).getSelectedValue();
+                    playList.setSelectedIndex(playList.locationToIndex(e.getPoint()));
+                    if (mediaPlayer != null && mediaPlayer.getStatus() == MediaPlayer.Status.PLAYING) {
+                        mediaPlayer.stop();
+                    }
+                    Media hit = new Media(new File(playList.getSelectedValue().toString()).toURI().toString());
+
+                    mediaPlayer = autoPlayerFrom(hit);
+                    mediaPlayer.play();
                 }
             }
         });
@@ -73,15 +84,40 @@ public class PlayerGui extends JFrame {
                 owner.broadcastNewMood(currentMoodBox.getSelectedItem().toString());
             }
         });
-        // TODO add Play button event listener
-        // TODO Play music at current playList index
-        // TODO ask PlaylistManager to download more if playing last element of the playlist
-        // TODO ask PlaylistManager to download if playList is empty
+        playButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                if (mediaPlayer == null) {
+                    if (playList.getModel().getSize() == 0) {
+                        owner.requestPlaylistExpansion();
+                    }
+                    if (playList.getSelectedValue() == null) {
+                        playList.setSelectedIndex(0);
+                    }
+                    Media hit = new Media(new File(playList.getSelectedValue().toString()).toURI().toString());
+
+                    mediaPlayer = autoPlayerFrom(hit);
+                }
+                mediaPlayer.play();
+            }
+        });
 
         // Final graphic setup.
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setContentPane(panel1);
         pack();
+        stopButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                mediaPlayer.stop();
+            }
+        });
+        pauseButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                mediaPlayer.pause();
+            }
+        });
     }
 
     JComboBox getCurrentMoodBox() {
@@ -90,5 +126,25 @@ public class PlayerGui extends JFrame {
 
     JLabel getInfoLabel() {
         return infoLabel;
+    }
+
+    private MediaPlayer autoPlayerFrom(Media hit) {
+        mediaPlayer = new MediaPlayer(hit);
+
+        mediaPlayer.setOnEndOfMedia(new Runnable() {
+            @Override
+            public void run() {
+                if (playList.getSelectedIndex() + 1 == playList.getModel().getSize()) {
+                    owner.requestPlaylistExpansion();
+                } else { // Play next music in list
+                    playList.setSelectedIndex(playList.getSelectedIndex() + 1);
+                    Media hit = new Media(new File(playList.getSelectedValue().toString()).toURI().toString());
+
+                    mediaPlayer = new MediaPlayer(hit);
+                    mediaPlayer.play();
+                }
+            }
+        });
+        return mediaPlayer;
     }
 }

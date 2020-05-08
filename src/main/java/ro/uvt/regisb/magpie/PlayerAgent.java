@@ -6,6 +6,7 @@ import jade.core.behaviours.CyclicBehaviour;
 import jade.lang.acl.ACLMessage;
 import jade.wrapper.ControllerException;
 import jade.wrapper.PlatformController;
+import javafx.embed.swing.JFXPanel;
 import ro.uvt.regisb.magpie.utils.Configuration;
 
 import java.io.ByteArrayInputStream;
@@ -14,18 +15,18 @@ import java.io.ObjectInputStream;
 import java.util.Base64;
 
 public class PlayerAgent extends Agent {
+    final JFXPanel jfxPanel = new JFXPanel();
     protected PlayerGui gui = null;
 
     @Override
     protected void setup() {
         System.out.println("Player online.");
-        addBehaviour(new CyclicBehaviour(this) {
+        addBehaviour(new CyclicBehaviour(this) { // ACL Message reader
             @Override
             public void action() {
                 ACLMessage msg = receive();
 
                 if (msg != null) {
-                    System.out.println("Player: " + msg.getContent());
                     if (msg.getPerformative() == ACLMessage.INFORM
                             && msg.getContent().startsWith("conf:")
                             && msg.getContent().length() > 5) {
@@ -50,14 +51,15 @@ public class PlayerAgent extends Agent {
                     block();
                 }
             }
-        });
-
-        PlatformController controller = getContainerController();
+        }); // End of message handler behavior.
 
         // Spawning required agents
+        PlatformController controller = getContainerController();
+
         try {
             controller.createNewAgent("magpie_preferences", "ro.uvt.regisb.magpie.PreferencesAgent", null).start();
             controller.createNewAgent("magpie_playlist", "ro.uvt.regisb.magpie.PlaylistAgent", null).start();
+            controller.createNewAgent("magpie_contentmanager", "ro.uvt.regisb.magpie.ContentManagerAgent", new String[]{"local", "audiosample.sqlite.db"}).start(); // TODO change to variables
         } catch (ControllerException e) {
             e.printStackTrace();
             doDelete();
@@ -67,6 +69,7 @@ public class PlayerAgent extends Agent {
         gui.getInfoLabel().setText("Info: Startup complete.");
         ACLMessage msg = new ACLMessage(ACLMessage.REQUEST);
 
+        // Retrieving last session configuration by asking the PreferencesAgent
         msg.addReceiver(new AID("magpie_preferences", AID.ISLOCALNAME));
         msg.setContent("configuration");
         send(msg);
@@ -85,6 +88,14 @@ public class PlayerAgent extends Agent {
         msg.setContent("mood:" + mood);
         msg.addReceiver(new AID("magpie_preferences", AID.ISLOCALNAME));
         send(msg);
-        System.out.println("Msg sent");
+    }
+
+    void requestPlaylistExpansion() {
+        ACLMessage msg = new ACLMessage(ACLMessage.REQUEST);
+
+        msg.setContent("expand:2"); // TODO replace 2 with user-defined batch size
+        msg.addReceiver(new AID("magpie_playlist", AID.ISLOCALNAME));
+        send(msg);
+        System.out.println("Player: Sent playlist expansion request.");
     }
 }

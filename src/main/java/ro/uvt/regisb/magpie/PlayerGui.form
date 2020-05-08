@@ -72,6 +72,10 @@
                   </grid>
                 </constraints>
                 <properties>
+                  <model>
+                    <item value="D:\Musique\FE15\BGM_SYS_MainTheme.mp3"/>
+                    <item value="D:\Musique\kek.wav"/>
+                  </model>
                   <selectionMode value="0"/>
                 </properties>
               </component>
