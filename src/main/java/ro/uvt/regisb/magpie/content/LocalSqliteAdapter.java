@@ -2,9 +2,8 @@ package ro.uvt.regisb.magpie.content;
 
 import ro.uvt.regisb.magpie.utils.WeightedMediaFilter;
 
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.SQLException;
+import java.sql.*;
+import java.util.ArrayList;
 import java.util.List;
 
 public class LocalSqliteAdapter implements MediaRetriever {
@@ -27,22 +26,26 @@ public class LocalSqliteAdapter implements MediaRetriever {
     @Override
     public List<String> download(int total, Object filter) {
         WeightedMediaFilter mf = (WeightedMediaFilter) filter;
-
-        System.out.println(mf.getFeel().get(0).getKey());
-        /*
+        List<String> results = null;
+        
+        // TODO generate proper statement from filter (assuming WeightedMediaFilter)
         try (Statement stmt = conn.createStatement()) {
-            ResultSet rs = stmt.executeQuery("SELECT * FROM audio WHERE high_bpm = 0 AND genre LIKE '%" + filter + "%' LIMIT " + total);
+            // TODO replace ORDER BY RANDOM() by "Not already in playlist"
+            ResultSet rs = stmt.executeQuery(String.format("SELECT title, path FROM audio WHERE feel LIKE '%%%s%%' ORDER BY RANDOM() LIMIT %d", mf.getFeel().get(0).getKey(), total));
 
-            while (rs.next()) {
-                System.out.println(String.format("Title: %s, Path: %s", rs.getString("title"), rs.getString("path")));
+            if (!rs.next()) {
+                // TODO loosen statement and retry
+            } else {
+                results = new ArrayList<>();
+                do {
+                    results.add(rs.getString("path"));
+                } while (rs.next());
             }
+            rs.close();
         } catch (SQLException e) {
             e.printStackTrace();
         }
-        */
-        // TODO generate statement from filter
-        // TODO return list of paths or song objects
-        return null;
+        return results;
     }
 
     @Override

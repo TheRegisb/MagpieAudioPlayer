@@ -23,12 +23,19 @@ public class PlaylistAgent extends Agent {
                 ACLMessage msg = receive();
 
                 if (msg != null) {
-                    System.out.println(msg.getContent());
                     if (msg.getPerformative() == ACLMessage.REQUEST
                             && msg.getContent().startsWith("expand:")
                             && msg.getContent().length() >= 8) { // At least a single digit expected
                         requestMoreContent(msg);
                     }
+                    if ((msg.getPerformative() == ACLMessage.PROPOSE
+                            || msg.getPerformative() == ACLMessage.FAILURE)
+                            && msg.getContent().startsWith("content:")) {
+                        msg.removeReceiver(this.getAgent().getAID());
+                        msg.addReceiver(new AID("magpie_player", AID.ISLOCALNAME));
+                        send(msg);
+                    }
+
                 } else {
                     block();
                 }
@@ -39,8 +46,6 @@ public class PlaylistAgent extends Agent {
     private void requestMoreContent(ACLMessage msg) {
         try {
             int totalToBeAdded = Integer.parseInt(msg.getContent().split(":")[1]);
-
-            System.out.println("Playlist: Request to expand the playlist by " + totalToBeAdded);
             // TODO gather moods from other agents
             WeightedMediaFilter mf = new WeightedMediaFilter();
 

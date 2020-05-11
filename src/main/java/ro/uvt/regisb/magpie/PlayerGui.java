@@ -89,6 +89,7 @@ public class PlayerGui extends JFrame {
             public void actionPerformed(ActionEvent e) {
                 if (mediaPlayer == null) {
                     if (playList.getModel().getSize() == 0) {
+                        infoLabel.setText("Info: Downloading more titles.");
                         owner.requestPlaylistExpansion();
                     }
                     if (playList.getSelectedValue() == null) {
@@ -128,6 +129,15 @@ public class PlayerGui extends JFrame {
         return infoLabel;
     }
 
+    void addMediaPaths(java.util.List<String> medias) {
+        DefaultListModel listContent = ((DefaultListModel) playList.getModel());
+
+        for (String path : medias) {
+            listContent.addElement(path);
+        }
+        infoLabel.setText("Info: Added " + medias.size() + " more track" + (medias.size() > 1 ? "s." : "."));
+    }
+
     private MediaPlayer autoPlayerFrom(Media hit) {
         mediaPlayer = new MediaPlayer(hit);
 
@@ -135,6 +145,7 @@ public class PlayerGui extends JFrame {
             @Override
             public void run() {
                 if (playList.getSelectedIndex() + 1 == playList.getModel().getSize()) {
+                    infoLabel.setText("Info: Downloading more titles.");
                     owner.requestPlaylistExpansion();
                 } else { // Play next music in list
                     playList.setSelectedIndex(playList.getSelectedIndex() + 1);

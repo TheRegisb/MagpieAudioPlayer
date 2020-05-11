@@ -12,6 +12,8 @@ import ro.uvt.regisb.magpie.utils.Configuration;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Base64;
 
 public class PlayerAgent extends Agent {
@@ -46,6 +48,10 @@ public class PlayerAgent extends Agent {
                         } catch (IOException | ClassNotFoundException e) {
                             e.printStackTrace();
                         }
+                    }
+                    if (msg.getPerformative() == ACLMessage.PROPOSE
+                            && msg.getContent().startsWith("content:")) {
+                        gui.addMediaPaths(new ArrayList<>(Arrays.asList(msg.getContent().split(":")[1].split(", "))));
                     }
                 } else {
                     block();

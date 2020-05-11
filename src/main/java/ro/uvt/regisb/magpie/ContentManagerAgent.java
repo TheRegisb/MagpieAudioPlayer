@@ -11,6 +11,7 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.util.Base64;
+import java.util.List;
 
 public class ContentManagerAgent extends Agent {
     private MediaRetriever mr = null;
@@ -43,8 +44,17 @@ public class ContentManagerAgent extends Agent {
                             ObjectInputStream si = new ObjectInputStream(bi);
                             WeightedMediaFilter mf = (WeightedMediaFilter) si.readObject();
 
-                            mr.download(count, mf);
-                            // TODO generate ACL message from download and sent it to PlaylistAgent
+                            ACLMessage res = new ACLMessage(ACLMessage.PROPOSE);
+                            List<String> results = mr.download(count, mf);
+                            res.addReceiver(msg.getSender());
+                            if (results == null) {
+                                res.setPerformative(ACLMessage.FAILURE);
+                                res.setContent("content:none");
+
+                            } else {
+                                res.setContent("content:" + results.toString().replaceAll("^\\[|]$", "")); // Trimming the brackets out, so Array.asList can be used later on
+                            }
+                            send(res);
                         } catch (IOException | ClassNotFoundException | NumberFormatException e) {
                             e.printStackTrace();
                             ACLMessage res = new ACLMessage(ACLMessage.NOT_UNDERSTOOD);
@@ -59,11 +69,6 @@ public class ContentManagerAgent extends Agent {
                 }
             }
         });
-
-        // TODO listen for download request
-        // TODO get music list from MediaRetriever
-        // TODO download music that are not stored locally
-        // TODO send list of local file
     }
 
     @Override
