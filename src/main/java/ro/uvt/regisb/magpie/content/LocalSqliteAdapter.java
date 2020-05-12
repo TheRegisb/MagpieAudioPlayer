@@ -33,7 +33,6 @@ public class LocalSqliteAdapter implements MediaRetriever {
             ResultSet medias;
 
             do {
-                System.out.println(generateStatementFrom(mf, total));
                 medias = executeQuery(generateStatementFrom(mf, total));
                 mf = mf.loosenConstrains(); // Preventive loosening
             } while (!medias.next() && maxRetries-- > 0); // No results and retries left, retrying with a more lax query.
@@ -67,22 +66,25 @@ public class LocalSqliteAdapter implements MediaRetriever {
         StringBuilder sb = new StringBuilder();
 
         sb.append("SELECT path, title FROM audio WHERE ");
+        // TODO add negative tags as NOT clause
         if (!mf.getGenre().isEmpty()) {
+            sb.append("(");
             for (int i = 0; i != mf.getGenre().size(); i++) {
                 sb.append("genre LIKE '%")
                         .append(mf.getGenre().get(i).getKey())
                         .append("%'")
-                        // If not on last tag, add an AND clause, single space otherwise.
-                        .append(i + 1 != mf.getGenre().size() ? " AND " : " ");
+                        // If not on last tag, add an AND clause, end of clauses group otherwise.
+                        .append(i + 1 != mf.getGenre().size() ? " OR " : ") ");
             }
         }
         if (!mf.getFeel().isEmpty()) {
+            sb.append(!mf.getGenre().isEmpty() ? "AND (" : "(");
             for (int i = 0; i != mf.getFeel().size(); i++) {
-                sb.append(!mf.getGenre().isEmpty() ? "AND " : "").append("feel LIKE '%")
+                sb.append("feel LIKE '%")
                         .append(mf.getFeel().get(i).getKey())
                         .append("%'")
-                        // If not on last tag, add an AND clause, single space otherwise.
-                        .append(i + 1 != mf.getFeel().size() ? " AND " : " ");
+                        // If not on last tag, add an AND clause, end of group otherwise.
+                        .append(i + 1 != mf.getFeel().size() ? " AND " : ") ");
             }
         }
         if (mf.isHighBPM()) {
