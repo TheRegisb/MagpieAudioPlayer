@@ -19,6 +19,13 @@ public class WeightedMediaFilter implements Serializable {
         feel = new ArrayList<>();
     }
 
+    public WeightedMediaFilter(WeightedMediaFilter filter) {
+        this.genre = new ArrayList<>(filter.genre);
+        this.feel = new ArrayList<>(filter.feel);
+        this.lowBPMCount = filter.lowBPMCount;
+        this.highBPMCount = filter.highBPMCount;
+    }
+
     // Functions
     public void addGenre(String genre, int count) {
         // Checking if genre not already in list
@@ -30,7 +37,12 @@ public class WeightedMediaFilter implements Serializable {
         }
         // Function did not returned, inserting pair.
         this.genre.add(Pair.of(genre, count));
-        // TODO sort genre by count
+        this.genre.sort((o1, o2) -> {
+            if (o1.getValue().equals(o2.getValue())) {
+                return 0;
+            }
+            return (o1.getValue() > o2.getValue() ? -1 : 1);
+        });
     }
 
     public void addGenre(String genre) {
@@ -47,6 +59,12 @@ public class WeightedMediaFilter implements Serializable {
         }
         // Function did not returned, inserting pair
         this.feel.add(Pair.of(feel, count));
+        this.feel.sort((o1, o2) -> {
+            if (o1.getValue().equals(o2.getValue())) {
+                return 0;
+            }
+            return (o1.getValue() > o2.getValue() ? -1 : 1);
+        });
     }
 
     public void addFeel(String feel) {
@@ -59,6 +77,25 @@ public class WeightedMediaFilter implements Serializable {
 
     public void tweakHighBPMCount(int count) {
         highBPMCount += count;
+    }
+
+    public WeightedMediaFilter loosenConstrains() {
+        WeightedMediaFilter filter = new WeightedMediaFilter(this);
+
+        // If no list is empty, then remove the lowest ranking tag among them
+        if (!(filter.getGenre().isEmpty() || filter.getFeel().isEmpty())) {
+            if (filter.getGenre().get(filter.getGenre().size() - 1).getValue()
+                    > filter.getFeel().get(filter.getFeel().size() - 1).getValue()) {
+                filter.getFeel().remove(filter.getFeel().size() - 1);
+            } else {
+                filter.getGenre().remove(filter.getGenre().size() - 1);
+            }
+        } else if (!filter.getFeel().isEmpty()) { // Otherwise, if feel isn't empty, remove the lowest ranking tag
+            filter.getFeel().remove(filter.getFeel().size() - 1);
+        } else if (!filter.getGenre().isEmpty()) { // Otherwise, if genre isn't empty, remove the lowest ranking tag
+            filter.getGenre().remove(filter.getGenre().size() - 1);
+        } // Otherwise, both lists are empty and no loosening operation can be performed.
+        return filter;
     }
 
     // Procedural getters

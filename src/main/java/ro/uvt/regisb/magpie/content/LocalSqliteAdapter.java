@@ -27,21 +27,24 @@ public class LocalSqliteAdapter implements MediaRetriever {
     public List<String> download(int total, Object filter) {
         WeightedMediaFilter mf = (WeightedMediaFilter) filter;
         List<String> results = null;
-        
-        // TODO generate proper statement from filter (assuming WeightedMediaFilter)
-        try (Statement stmt = conn.createStatement()) {
-            // TODO replace ORDER BY RANDOM() by "Not already in playlist"
-            ResultSet rs = stmt.executeQuery(String.format("SELECT title, path FROM audio WHERE feel LIKE '%%%s%%' ORDER BY RANDOM() LIMIT %d", mf.getFeel().get(0).getKey(), total));
+        int maxRetries = 10;
 
-            if (!rs.next()) {
-                // TODO loosen statement and retry
-            } else {
-                results = new ArrayList<>();
-                do {
-                    results.add(rs.getString("path"));
-                } while (rs.next());
+        try {
+            ResultSet medias;
+
+            do {
+                System.out.println(generateStatementFrom(mf, total));
+                medias = executeQuery(generateStatementFrom(mf, total));
+                mf = mf.loosenConstrains(); // Preventive loosening
+            } while (!medias.next() && maxRetries-- > 0); // No results and retries left, retrying with a more lax query.
+            if (maxRetries == 0) {
+                return null; // Unable to find matching content.
             }
-            rs.close();
+            results = new ArrayList<>();
+            do {
+                results.add(medias.getString("path"));
+            } while (medias.next());
+            medias.close();
         } catch (SQLException e) {
             e.printStackTrace();
         }
@@ -58,5 +61,42 @@ public class LocalSqliteAdapter implements MediaRetriever {
                 e.printStackTrace();
             }
         }
+    }
+
+    private String generateStatementFrom(WeightedMediaFilter mf, int count) {
+        StringBuilder sb = new StringBuilder();
+
+        sb.append("SELECT path, title FROM audio WHERE ");
+        if (!mf.getGenre().isEmpty()) {
+            for (int i = 0; i != mf.getGenre().size(); i++) {
+                sb.append("genre LIKE '%")
+                        .append(mf.getGenre().get(i).getKey())
+                        .append("%'")
+                        // If not on last tag, add an AND clause, single space otherwise.
+                        .append(i + 1 != mf.getGenre().size() ? " AND " : " ");
+            }
+        }
+        if (!mf.getFeel().isEmpty()) {
+            for (int i = 0; i != mf.getFeel().size(); i++) {
+                sb.append(!mf.getGenre().isEmpty() ? "AND " : "").append("feel LIKE '%")
+                        .append(mf.getFeel().get(i).getKey())
+                        .append("%'")
+                        // If not on last tag, add an AND clause, single space otherwise.
+                        .append(i + 1 != mf.getFeel().size() ? " AND " : " ");
+            }
+        }
+        if (mf.isHighBPM()) {
+            sb.append("AND high_bpm = 1 ");
+        } else if (mf.isLowBPM()) {
+            sb.append("AND low_bpm = 1 ");
+        }
+        sb.append(" ORDER BY RANDOM() LIMIT ").append(count); // TODO change random selection by 'Not in existing playlist'
+        return sb.toString();
+    }
+
+    private ResultSet executeQuery(String query) throws SQLException {
+        Statement stmt = conn.createStatement();
+
+        return stmt.executeQuery(query);
     }
 }
