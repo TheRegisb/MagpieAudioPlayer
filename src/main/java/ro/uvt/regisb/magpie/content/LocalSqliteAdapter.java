@@ -80,19 +80,30 @@ public class LocalSqliteAdapter implements MediaRetriever {
         if (!mf.getFeel().isEmpty()) {
             sb.append(!mf.getGenre().isEmpty() ? "AND (" : "(");
             for (int i = 0; i != mf.getFeel().size(); i++) {
-                sb.append("feel LIKE '%")
+                sb.append("feel ").append(mf.getFeel().get(i).getValue() < 0 ? "NOT" : "").append(" LIKE '%")
                         .append(mf.getFeel().get(i).getKey())
                         .append("%'")
                         // If not on last tag, add an AND clause, end of group otherwise.
                         .append(i + 1 != mf.getFeel().size() ? " AND " : ") ");
             }
         }
-        if (mf.isHighBPM()) {
-            sb.append("AND high_bpm = 1 ");
-        } else if (mf.isLowBPM()) {
-            sb.append("AND low_bpm = 1 ");
+        switch (mf.getBPM()) {
+            case ENERGETIC:
+                sb.append("AND high_bpm = 1 AND low_bpm = 0 ");
+                sb.append("AND high_bpm = 1 AND low_bpm = 0 ");
+                break;
+            case NOT_CALM:
+                sb.append("AND low_bpm = 0 ");
+                break;
+            case NEUTRAL:
+                break;
+            case NOT_ENERGETIC:
+                sb.append("AND high_bpm = 0 ");
+            case CALM:
+                sb.append("AND high_bpm = 0 AND low_bpm = 1 ");
         }
-        sb.append(" ORDER BY RANDOM() LIMIT ").append(count); // TODO change random selection by 'Not in existing playlist'
+        sb.append("ORDER BY RANDOM() LIMIT ").append(count); // TODO change random selection by 'Not in existing playlist'
+        System.out.println(sb.toString());
         return sb.toString();
     }
 

@@ -7,6 +7,16 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class WeightedMediaFilter implements Serializable {
+    public enum BPMClassification {
+        ENERGETIC,
+        NOT_CALM,
+        NEUTRAL,
+        NOT_ENERGETIC,
+        CALM
+    }
+
+    ;
+
     private static final long serialVersionUID = 1L;
     private List<Pair<String, Integer>> genre;
     private List<Pair<String, Integer>> feel;
@@ -38,10 +48,10 @@ public class WeightedMediaFilter implements Serializable {
         // Function did not returned, inserting pair.
         this.genre.add(Pair.of(genre, count));
         this.genre.sort((o1, o2) -> {
-            if (o1.getValue().equals(o2.getValue())) {
+            if (Math.abs(o1.getValue()) == Math.abs(o2.getValue())) {
                 return 0;
             }
-            return (o1.getValue() > o2.getValue() ? -1 : 1);
+            return (Math.abs(o1.getValue()) > Math.abs(o2.getValue()) ? -1 : 1);
         });
     }
 
@@ -60,10 +70,10 @@ public class WeightedMediaFilter implements Serializable {
         // Function did not returned, inserting pair
         this.feel.add(Pair.of(feel, count));
         this.feel.sort((o1, o2) -> {
-            if (o1.getValue().equals(o2.getValue())) {
+            if (Math.abs(o1.getValue()) == Math.abs(o2.getValue())) {
                 return 0;
             }
-            return (o1.getValue() > o2.getValue() ? -1 : 1);
+            return (Math.abs(o1.getValue()) > Math.abs(o2.getValue()) ? -1 : 1);
         });
     }
 
@@ -99,12 +109,22 @@ public class WeightedMediaFilter implements Serializable {
     }
 
     // Procedural getters
-    public boolean isLowBPM() {
-        return lowBPMCount > 1; // TODO improve formula
-    }
+    public BPMClassification getBPM() {
+        double ratio = Math.abs((double) highBPMCount - lowBPMCount) / Math.max(Math.abs(highBPMCount), Math.abs(lowBPMCount));
+        boolean highIsMajor;
 
-    public boolean isHighBPM() {
-        return highBPMCount > 1; // TODO improve formula
+        if (Math.abs(highBPMCount) > Math.abs(lowBPMCount)) {
+            highIsMajor = true;
+        } else {
+            highIsMajor = highBPMCount > lowBPMCount;
+        }
+        if (ratio >= 0 && ratio <= 0.2) {
+            return BPMClassification.NEUTRAL;
+        } else if (ratio > 0.2 && ratio <= 0.6) {
+            return (highIsMajor ? BPMClassification.NOT_CALM : BPMClassification.NOT_ENERGETIC);
+        } else {
+            return (highIsMajor ? BPMClassification.ENERGETIC : BPMClassification.CALM);
+        }
     }
 
     // Generic getters
