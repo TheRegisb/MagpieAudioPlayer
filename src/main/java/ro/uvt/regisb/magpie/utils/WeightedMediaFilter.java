@@ -15,8 +15,6 @@ public class WeightedMediaFilter implements Serializable {
         CALM
     }
 
-    ;
-
     private static final long serialVersionUID = 1L;
     private List<Pair<String, Integer>> genre;
     private List<Pair<String, Integer>> feel;
@@ -39,14 +37,18 @@ public class WeightedMediaFilter implements Serializable {
     // Functions
     public void addGenre(String genre, int count) {
         // Checking if genre not already in list
+        boolean alreadyPresent = false;
+
         for (Pair<String, Integer> entry : this.genre) {
             if (entry.getKey().equals(genre)) {
                 entry.setValue(entry.getValue() + count);
-                return;
+                alreadyPresent = true;
+                break;
             }
         }
-        // Function did not returned, inserting pair.
-        this.genre.add(Pair.of(genre, count));
+        if (!alreadyPresent) {
+            this.genre.add(Pair.of(genre, count));
+        }
         this.genre.sort((o1, o2) -> {
             if (Math.abs(o1.getValue()) == Math.abs(o2.getValue())) {
                 return 0;
@@ -60,15 +62,18 @@ public class WeightedMediaFilter implements Serializable {
     }
 
     public void addFeel(String feel, int count) {
+        boolean alreadyPresent = false;
         // Checking if feel not already in list
         for (Pair<String, Integer> entry : this.feel) {
             if (entry.getKey().equals(feel)) {
-                entry.setValue(entry.getValue() + 1);
-                return;
+                entry.setValue(entry.getValue() + count);
+                alreadyPresent = true;
+                break;
             }
         }
-        // Function did not returned, inserting pair
-        this.feel.add(Pair.of(feel, count));
+        if (!alreadyPresent) {
+            this.feel.add(Pair.of(feel, count));
+        }
         this.feel.sort((o1, o2) -> {
             if (Math.abs(o1.getValue()) == Math.abs(o2.getValue())) {
                 return 0;
@@ -110,6 +115,10 @@ public class WeightedMediaFilter implements Serializable {
 
     // Procedural getters
     public BPMClassification getBPM() {
+        if (highBPMCount == 0 && lowBPMCount == 0) {
+            return BPMClassification.NEUTRAL;
+        }
+
         double ratio = Math.abs((double) highBPMCount - lowBPMCount) / Math.max(Math.abs(highBPMCount), Math.abs(lowBPMCount));
         boolean highIsMajor;
 
