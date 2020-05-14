@@ -1,10 +1,7 @@
 package ro.uvt.regisb.magpie;
 
-import jade.core.AID;
 import jade.core.Agent;
 import jade.core.behaviours.TickerBehaviour;
-import jade.lang.acl.ACLMessage;
-import org.apache.commons.lang3.tuple.Pair;
 import ro.uvt.regisb.magpie.utils.ProcessAttributes;
 
 import java.util.ArrayList;
@@ -62,14 +59,22 @@ public class ProcessesAgent extends Agent {
     }
 
     private void notifyPlaylistAgent(ProcessAttributes processAttributes, boolean deleted) {
+        // TODO send serialized processAttributes
+        /*
         ACLMessage msg = new ACLMessage(ACLMessage.PROPOSE);
         StringBuilder sb = new StringBuilder();
 
 
         sb.append("process:bpm:").append(processAttributes.getBpmTweak());
-        if (!processAttributes.getAttributes().isEmpty()) {
+        if (!processAttributes.getFeel().isEmpty()) {
             sb.append(":");
-            for (Pair<String, Integer> attr : processAttributes.getAttributes()) {
+            for (Pair<String, Integer> attr : processAttributes.getFeel()) {
+                sb.append(attr.getKey()).append(":").append(attr.getValue() * (deleted ? -1 : 1)); // Negate previously added tags at process exit
+            }
+        }
+        if (!processAttributes.getGenre().isEmpty()) {
+            sb.append(":");
+            for (Pair<String, Integer> attr : processAttributes.getFeel()) {
                 sb.append(attr.getKey()).append(":").append(attr.getValue() * (deleted ? -1 : 1)); // Negate previously added tags at process exit
             }
         }
@@ -77,6 +82,7 @@ public class ProcessesAgent extends Agent {
         msg.setContent(sb.toString());
         System.out.println(msg.getContent());
         send(msg);
+         */
     }
 
     private ProcessAttributes getProcessAttributesByName(String name) {

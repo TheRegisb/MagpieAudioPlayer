@@ -2,6 +2,8 @@ package ro.uvt.regisb.magpie;
 
 import javafx.scene.media.Media;
 import javafx.scene.media.MediaPlayer;
+import ro.uvt.regisb.magpie.ui.ProcessWatchlistDialog;
+import ro.uvt.regisb.magpie.utils.ProcessAttributes;
 
 import javax.swing.*;
 import java.awt.*;
@@ -119,6 +121,40 @@ public class PlayerGui extends JFrame {
                 mediaPlayer.pause();
             }
         });
+        processesNewButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                ProcessWatchlistDialog form = new ProcessWatchlistDialog();
+
+                if (form.showDialog() == JOptionPane.OK_OPTION) {
+                    ProcessAttributes proc = form.getProcessAttributes();
+
+                    if (proc.getName().isBlank()) {
+                        JOptionPane.showMessageDialog(null,
+                                "Missing process name.", "Monitor Process",
+                                JOptionPane.WARNING_MESSAGE);
+                    } else if (proc.getGenre().isEmpty() && proc.getFeel().isEmpty() && proc.getBpmTweak() == 0) {
+                        JOptionPane.showMessageDialog(null,
+                                "Missing process attributes.", "Monitor Process",
+                                JOptionPane.WARNING_MESSAGE);
+                    } else {
+                        // TODO else broadcast process attributes
+                        System.out.println(form.getProcessAttributes());
+                        ((DefaultListModel) processesList.getModel()).addElement(form.getProcessName());
+                    }
+                }
+
+            }
+        });
+        processesDeleteButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                if (processesList.getSelectedIndex() != -1) {
+                    ((DefaultListModel) processesList.getModel()).remove(processesList.getSelectedIndex());
+                    // TODO broadcast removal
+                }
+            }
+        });
     }
 
     JComboBox getCurrentMoodBox() {
@@ -157,5 +193,11 @@ public class PlayerGui extends JFrame {
             }
         });
         return mediaPlayer;
+    }
+
+    private void createUIComponents() {
+        // TODO: place custom component creation code here
+        processesList = new JList<>(new DefaultListModel<>());
+        timeSlotList = new JList<>(new DefaultListModel<>());
     }
 }
