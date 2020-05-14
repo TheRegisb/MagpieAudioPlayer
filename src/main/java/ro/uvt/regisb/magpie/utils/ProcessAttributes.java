@@ -17,6 +17,26 @@ public class ProcessAttributes implements Serializable {
         this.name = name;
     }
 
+    private ProcessAttributes(ProcessAttributes attrs) {
+        this.name = attrs.name;
+        this.feel = new ArrayList<>();
+        this.genre = new ArrayList<>();
+        this.bpmTweak = attrs.bpmTweak;
+    }
+
+    public ProcessAttributes invert() {
+        ProcessAttributes inverse = new ProcessAttributes(this);
+
+        for (Pair<String, Integer> a : this.genre) {
+            inverse.addGenre(a.getKey(), a.getValue() * -1);
+        }
+        for (Pair<String, Integer> a : this.feel) {
+            inverse.addFeel(a.getKey(), a.getValue() * -1);
+        }
+        inverse.bpmTweak *= -1;
+        return inverse;
+    }
+
     public void addGenre(String name, int weight) {
         for (Pair<String, Integer> entry : this.genre) {
             if (entry.getKey().equals(name)) {

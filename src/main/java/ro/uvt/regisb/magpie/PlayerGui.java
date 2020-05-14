@@ -138,9 +138,8 @@ public class PlayerGui extends JFrame {
                                 "Missing process attributes.", "Monitor Process",
                                 JOptionPane.WARNING_MESSAGE);
                     } else {
-                        // TODO else broadcast process attributes
-                        System.out.println(form.getProcessAttributes());
                         ((DefaultListModel) processesList.getModel()).addElement(form.getProcessName());
+                        owner.broadcastProcessMonitored(proc);
                     }
                 }
 
@@ -150,8 +149,8 @@ public class PlayerGui extends JFrame {
             @Override
             public void actionPerformed(ActionEvent e) {
                 if (processesList.getSelectedIndex() != -1) {
+                    owner.broadcastProcessUnmonitored((String) processesList.getSelectedValue());
                     ((DefaultListModel) processesList.getModel()).remove(processesList.getSelectedIndex());
-                    // TODO broadcast removal
                 }
             }
         });

@@ -8,10 +8,9 @@ import jade.wrapper.ControllerException;
 import jade.wrapper.PlatformController;
 import javafx.embed.swing.JFXPanel;
 import ro.uvt.regisb.magpie.utils.Configuration;
+import ro.uvt.regisb.magpie.utils.ProcessAttributes;
 
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.io.ObjectInputStream;
+import java.io.*;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Base64;
@@ -94,6 +93,32 @@ public class PlayerAgent extends Agent {
 
         msg.setContent("mood:" + mood);
         msg.addReceiver(new AID("magpie_preferences", AID.ISLOCALNAME));
+        send(msg);
+    }
+
+    void broadcastProcessMonitored(ProcessAttributes proc) {
+        try {
+            ACLMessage msg = new ACLMessage(ACLMessage.INFORM);
+            ByteArrayOutputStream bo = new ByteArrayOutputStream();
+            ObjectOutputStream so = new ObjectOutputStream(bo);
+
+            so.writeObject(proc);
+            so.flush();
+            msg.addReceiver(new AID("magpie_preferences", AID.ISLOCALNAME));
+            msg.addReceiver(new AID("magpie_processesmonitor", AID.ISLOCALNAME));
+            msg.setContent("process:add:" + new String(Base64.getEncoder().encode(bo.toByteArray())));
+            send(msg);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    void broadcastProcessUnmonitored(String procName) {
+        ACLMessage msg = new ACLMessage(ACLMessage.INFORM);
+
+        msg.addReceiver(new AID("magpie_preferences", AID.ISLOCALNAME));
+        msg.addReceiver(new AID("magpie_processesmonitor", AID.ISLOCALNAME));
+        msg.setContent("process:remove:" + procName);
         send(msg);
     }
 
