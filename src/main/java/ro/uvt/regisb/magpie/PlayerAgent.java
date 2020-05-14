@@ -7,6 +7,7 @@ import jade.lang.acl.ACLMessage;
 import jade.wrapper.ControllerException;
 import jade.wrapper.PlatformController;
 import javafx.embed.swing.JFXPanel;
+import ro.uvt.regisb.magpie.ui.PlayerGui;
 import ro.uvt.regisb.magpie.utils.Configuration;
 import ro.uvt.regisb.magpie.utils.ProcessAttributes;
 
@@ -17,7 +18,7 @@ import java.util.Base64;
 
 public class PlayerAgent extends Agent {
     final JFXPanel jfxPanel = new JFXPanel();
-    protected PlayerGui gui = null;
+    private PlayerGui gui = null;
 
     @Override
     protected void setup() {
@@ -88,7 +89,7 @@ public class PlayerAgent extends Agent {
         gui.validate();
     }
 
-    void broadcastNewMood(String mood) {
+    public void broadcastNewMood(String mood) {
         ACLMessage msg = new ACLMessage(ACLMessage.INFORM);
 
         msg.setContent("mood:" + mood);
@@ -96,7 +97,7 @@ public class PlayerAgent extends Agent {
         send(msg);
     }
 
-    void broadcastProcessMonitored(ProcessAttributes proc) {
+    public void broadcastProcessMonitored(ProcessAttributes proc) {
         try {
             ACLMessage msg = new ACLMessage(ACLMessage.INFORM);
             ByteArrayOutputStream bo = new ByteArrayOutputStream();
@@ -113,7 +114,7 @@ public class PlayerAgent extends Agent {
         }
     }
 
-    void broadcastProcessUnmonitored(String procName) {
+    public void broadcastProcessUnmonitored(String procName) {
         ACLMessage msg = new ACLMessage(ACLMessage.INFORM);
 
         msg.addReceiver(new AID("magpie_preferences", AID.ISLOCALNAME));
@@ -122,7 +123,7 @@ public class PlayerAgent extends Agent {
         send(msg);
     }
 
-    void requestPlaylistExpansion() {
+    public void requestPlaylistExpansion() {
         ACLMessage msg = new ACLMessage(ACLMessage.REQUEST);
 
         msg.setContent("expand:2"); // TODO replace 2 with user-defined batch size

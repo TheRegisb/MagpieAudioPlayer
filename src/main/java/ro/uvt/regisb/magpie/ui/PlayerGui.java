@@ -1,9 +1,10 @@
-package ro.uvt.regisb.magpie;
+package ro.uvt.regisb.magpie.ui;
 
 import javafx.scene.media.Media;
 import javafx.scene.media.MediaPlayer;
-import ro.uvt.regisb.magpie.ui.ProcessWatchlistDialog;
+import ro.uvt.regisb.magpie.PlayerAgent;
 import ro.uvt.regisb.magpie.utils.ProcessAttributes;
+import ro.uvt.regisb.magpie.utils.TimeInterval;
 
 import javax.swing.*;
 import java.awt.*;
@@ -12,6 +13,8 @@ import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.io.File;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 
 public class PlayerGui extends JFrame {
     // From the .form
@@ -145,26 +148,43 @@ public class PlayerGui extends JFrame {
 
             }
         });
-        processesDeleteButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                if (processesList.getSelectedIndex() != -1) {
-                    owner.broadcastProcessUnmonitored((String) processesList.getSelectedValue());
-                    ((DefaultListModel) processesList.getModel()).remove(processesList.getSelectedIndex());
+        processesDeleteButton.addActionListener(e -> {
+            if (processesList.getSelectedIndex() != -1) {
+                owner.broadcastProcessUnmonitored((String) processesList.getSelectedValue());
+                ((DefaultListModel) processesList.getModel()).remove(processesList.getSelectedIndex());
+            }
+        });
+        timeSlotNewButton.addActionListener(e -> {
+            TimeSlotDialog form = new TimeSlotDialog();
+
+            if (form.showDialog() == JOptionPane.OK_OPTION) {
+                TimeInterval aled = form.getTimeInterval();
+
+                if (aled != null) {
+                    System.out.println(aled);
+                    try {
+                        System.out.println(aled.isTimeInInterval(new SimpleDateFormat("HH:mm").parse("18:00")));
+                        System.out.println(aled.isTimeInInterval(new SimpleDateFormat("HH:mm").parse("03:00")));
+                    } catch (ParseException exp) {
+                        exp.printStackTrace();
+                    }
+                } else {
+                    System.out.println("null?!");
                 }
             }
+
         });
     }
 
-    JComboBox getCurrentMoodBox() {
+    public JComboBox getCurrentMoodBox() {
         return currentMoodBox;
     }
 
-    JLabel getInfoLabel() {
+    public JLabel getInfoLabel() {
         return infoLabel;
     }
 
-    void addMediaPaths(java.util.List<String> medias) {
+    public void addMediaPaths(java.util.List<String> medias) {
         DefaultListModel listContent = ((DefaultListModel) playList.getModel());
 
         for (String path : medias) {
