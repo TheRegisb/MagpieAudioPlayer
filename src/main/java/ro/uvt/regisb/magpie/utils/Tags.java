@@ -85,17 +85,17 @@ public class Tags implements Serializable {
         return bpmTweak;
     }
 
-    public boolean parse(String tagLiteral) {
+    public boolean parse(String tagLiteral, int weight) {
         boolean valid = true;
 
         if (tagLiteral.equals("Low BPM")) {
-            tweakBpm(-1);
+            tweakBpm(weight * -1);
         } else if (tagLiteral.equals("High BPM")) {
-            tweakBpm(1);
+            tweakBpm(weight);
         } else if (tagLiteral.startsWith("Genre:")) {
-            addGenre(tagLiteral.split(": ")[1], 1);
+            addGenre(tagLiteral.split(": ")[1], weight);
         } else if (tagLiteral.startsWith("Feel:")) {
-            addFeel(tagLiteral.split(": ")[1], 1);
+            addFeel(tagLiteral.split(": ")[1], weight);
         } else {
             valid = false;
         }
@@ -128,12 +128,13 @@ public class Tags implements Serializable {
     public String toString() {
         StringBuilder sb = new StringBuilder();
 
+        sb.append("Genre: ");
         for (Pair<String, Integer> g : genre) {
-            sb.append('<').append(g.getKey()).append(", ").append(g.getValue()).append('>');
+            sb.append('{').append(g.getKey()).append(", ").append(g.getValue()).append('}');
         }
-        sb.append("; Feels: ");
+        sb.append("Feels: ");
         for (Pair<String, Integer> f : feel) {
-            sb.append('<').append(f.getKey()).append(", ").append(f.getValue()).append('>');
+            sb.append('{').append(f.getKey()).append(", ").append(f.getValue()).append('}');
         }
         sb.append("; BPM Tweak: ").append(bpmTweak);
         return sb.toString();

@@ -6,6 +6,7 @@ public class ProcessAttributes implements Serializable {
     private static final long serialVersionUID = 1L;
     private String name;
     private Tags tags;
+    private transient boolean isActive = false;
 
     public ProcessAttributes(String name) {
         this.name = name;
@@ -20,7 +21,7 @@ public class ProcessAttributes implements Serializable {
     public ProcessAttributes invert() {
         ProcessAttributes inverse = new ProcessAttributes(this);
 
-        inverse.tags.invert();
+        inverse.tags = this.tags.invert();
         return inverse;
     }
 
@@ -36,5 +37,13 @@ public class ProcessAttributes implements Serializable {
     @Override
     public String toString() {
         return "Process name: " + name + "; " + tags.toString();
+    }
+
+    public boolean isActive() {
+        return isActive;
+    }
+
+    public void setActive(boolean active) {
+        isActive = active;
     }
 }

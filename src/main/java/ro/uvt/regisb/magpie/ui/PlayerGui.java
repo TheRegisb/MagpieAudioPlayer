@@ -201,7 +201,6 @@ public class PlayerGui extends JFrame {
     }
 
     private void createUIComponents() {
-        // TODO: place custom component creation code here
         processesList = new JList<>(new DefaultListModel<>());
         timeSlotList = new JList<>(new DefaultListModel<>());
     }

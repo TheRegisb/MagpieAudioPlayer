@@ -91,12 +91,12 @@ public class ProcessWatchlistDialog extends JPanel {
         for (int i = 0; i != includeList.getModel().getSize(); i++) {
             String attrString = (String) includeList.getModel().getElementAt(i);
 
-            attrs.getTags().parse(attrString);
+            attrs.getTags().parse(attrString, 1);
         }
         for (int i = 0; i != excludeList.getModel().getSize(); i++) {
             String attrString = (String) excludeList.getModel().getElementAt(i);
 
-            attrs.getTags().parse(attrString);
+            attrs.getTags().parse(attrString, -1);
         }
         return attrs;
     }

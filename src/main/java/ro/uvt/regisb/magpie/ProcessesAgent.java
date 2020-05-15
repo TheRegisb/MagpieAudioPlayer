@@ -13,7 +13,6 @@ import java.util.List;
 
 public class ProcessesAgent extends Agent {
     private List<ProcessAttributes> watchlist = new ArrayList<>();
-    private List<String> monitoredProcesses = new ArrayList<>();
 
     @Override
     protected void setup() {
@@ -24,16 +23,15 @@ public class ProcessesAgent extends Agent {
             protected void onTick() {
                 ProcessHandle.allProcesses().filter(ProcessHandle::isAlive).forEach(ph -> {
                     if (ph.info().command().isPresent() // If under watchlist and not already monitored
-                            && !processActivelyMonitored(ph.info().command().get())
                             && processInWatchlist(ph.info().command().get())) {
                         ProcessAttributes pa = getProcessAttributesByName(ph.info().command().get());
 
-                        if (pa != null) {
-                            monitoredProcesses.add(pa.getName());
+                        if (pa != null && !pa.isActive()) {
                             notifyPlaylistAgent(pa, false);
+                            pa.setActive(true);
                             ph.onExit().thenRun(() -> {
                                 notifyPlaylistAgent(pa, true);
-                                monitoredProcesses.remove(pa.getName());
+                                pa.setActive(false);
                             });
                         }
                     }
@@ -70,8 +68,8 @@ public class ProcessesAgent extends Agent {
                         if (processInWatchlist(processName)) {
                             for (int i = 0; i != watchlist.size(); i++) { // Looking for index of process
                                 if (watchlist.get(i).getName().equals(processName)) {
-                                    if (processActivelyMonitored(processName)) {
-                                        notifyPlaylistAgent(watchlist.get(i), true); // Remove process effect if currently running
+                                    if (watchlist.get(i).isActive()) {
+                                        notifyPlaylistAgent(watchlist.get(i), true); // Revert process effect if currently running
                                     }
                                     watchlist.remove(i);
                                     break;
@@ -91,20 +89,10 @@ public class ProcessesAgent extends Agent {
             }
         });
     }
-    // TODO receive order to monitor a named process
 
     private boolean processInWatchlist(String processName) {
         for (ProcessAttributes pa : watchlist) {
             if (processName.contains(pa.getName())) { // TODO less naive checking
-                return true;
-            }
-        }
-        return false;
-    }
-
-    private boolean processActivelyMonitored(String processName) {
-        for (String pa : monitoredProcesses) {
-            if (processName.contains(pa)) { // TODO less naive checking
                 return true;
             }
         }

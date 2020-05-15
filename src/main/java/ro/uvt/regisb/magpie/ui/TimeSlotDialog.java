@@ -78,7 +78,6 @@ public class TimeSlotDialog extends JPanel {
     }
 
     private void createUIComponents() {
-        // TODO: place custom component creation code here
         timeStartSpinner = new JSpinner(new SpinnerDateModel(new Date(), null, null, Calendar.MINUTE));
         timeStartSpinner.setEditor(new JSpinner.DateEditor(timeStartSpinner, "HH:mm"));
         timeEndSpinner = new JSpinner(new SpinnerDateModel(new Date(), null, null, Calendar.MINUTE));
@@ -109,10 +108,10 @@ public class TimeSlotDialog extends JPanel {
             );
 
             for (int i = 0; i != includeList.getModel().getSize(); i++) {
-                result.getTags().parse((String) includeList.getModel().getElementAt(i));
+                result.getTags().parse((String) includeList.getModel().getElementAt(i), 1);
             }
             for (int i = 0; i != excludeList.getModel().getSize(); i++) {
-                result.getTags().parse((String) excludeList.getModel().getElementAt(i));
+                result.getTags().parse((String) excludeList.getModel().getElementAt(i), -1);
             }
             return result;
         } catch (ParseException e) {

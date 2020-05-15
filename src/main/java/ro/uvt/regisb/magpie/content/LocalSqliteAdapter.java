@@ -66,11 +66,10 @@ public class LocalSqliteAdapter implements MediaRetriever {
         StringBuilder sb = new StringBuilder();
 
         sb.append("SELECT path, title FROM audio WHERE ");
-        // TODO add negative tags as NOT clause
         if (!mf.getGenre().isEmpty()) {
             sb.append("(");
             for (int i = 0; i != mf.getGenre().size(); i++) {
-                sb.append("genre LIKE '%")
+                sb.append("genre ").append(mf.getGenre().get(i).getValue() < 0 ? "NOT" : "").append(" LIKE '%")
                         .append(mf.getGenre().get(i).getKey())
                         .append("%'")
                         // If not on last tag, add an AND clause, end of clauses group otherwise.

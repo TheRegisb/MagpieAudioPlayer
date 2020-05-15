@@ -53,6 +53,10 @@ public class TimeInterval implements Serializable {
         return isActive;
     }
 
+    public void setActive(boolean active) {
+        isActive = active;
+    }
+
     @Override
     public String toString() {
         return String.format("[%02d:%02d, %02d:%02d]",
