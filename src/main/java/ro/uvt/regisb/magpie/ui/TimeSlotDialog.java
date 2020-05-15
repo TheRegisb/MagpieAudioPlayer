@@ -102,8 +102,19 @@ public class TimeSlotDialog extends JPanel {
 
             start.setTime((Date) timeStartSpinner.getValue());
             stop.setTime((Date) timeEndSpinner.getValue());
-            return new TimeInterval(String.format("%d:%d", start.get(Calendar.HOUR_OF_DAY), start.get(Calendar.MINUTE)),
-                    String.format("%d:%d", stop.get(Calendar.HOUR_OF_DAY), stop.get(Calendar.MINUTE)));
+
+            TimeInterval result = new TimeInterval(
+                    String.format("%d:%d", start.get(Calendar.HOUR_OF_DAY), start.get(Calendar.MINUTE)),
+                    String.format("%d:%d", stop.get(Calendar.HOUR_OF_DAY), stop.get(Calendar.MINUTE))
+            );
+
+            for (int i = 0; i != includeList.getModel().getSize(); i++) {
+                result.getTags().parse((String) includeList.getModel().getElementAt(i));
+            }
+            for (int i = 0; i != excludeList.getModel().getSize(); i++) {
+                result.getTags().parse((String) excludeList.getModel().getElementAt(i));
+            }
+            return result;
         } catch (ParseException e) {
             return null;
         }

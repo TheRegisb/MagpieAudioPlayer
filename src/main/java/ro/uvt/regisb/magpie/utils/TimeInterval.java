@@ -1,14 +1,16 @@
 package ro.uvt.regisb.magpie.utils;
 
+import java.io.Serializable;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
 
-public class TimeInterval {
+public class TimeInterval implements Serializable {
     private Calendar startTime = Calendar.getInstance();
     private Calendar stopTime = Calendar.getInstance();
-    // TODO add genre, feel and BPM objects
+    private Tags tags = new Tags();
+    private transient boolean isActive = false;
 
     public TimeInterval(String start, String stop) throws ParseException {
         startTime.setTime(new SimpleDateFormat("HH:mm").parse(start));
@@ -33,6 +35,22 @@ public class TimeInterval {
             }
             return current.before(stopTime);
         }
+    }
+
+    public boolean equals(String ti) {
+        return this.toString().equals(ti);
+    }
+
+    public boolean equals(TimeInterval ti) {
+        return this.toString().equals(ti.toString()) && tags.equals(ti.getTags());
+    }
+
+    public Tags getTags() {
+        return tags;
+    }
+
+    public boolean isActive() {
+        return isActive;
     }
 
     @Override

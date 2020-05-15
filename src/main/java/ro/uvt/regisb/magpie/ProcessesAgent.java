@@ -128,10 +128,6 @@ public class ProcessesAgent extends Agent {
         } catch (IOException e) {
             e.printStackTrace();
         }
-
-
-
-
     }
 
     private ProcessAttributes getProcessAttributesByName(String name) {

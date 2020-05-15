@@ -10,6 +10,7 @@ import javafx.embed.swing.JFXPanel;
 import ro.uvt.regisb.magpie.ui.PlayerGui;
 import ro.uvt.regisb.magpie.utils.Configuration;
 import ro.uvt.regisb.magpie.utils.ProcessAttributes;
+import ro.uvt.regisb.magpie.utils.TimeInterval;
 
 import java.io.*;
 import java.util.ArrayList;
@@ -100,14 +101,10 @@ public class PlayerAgent extends Agent {
     public void broadcastProcessMonitored(ProcessAttributes proc) {
         try {
             ACLMessage msg = new ACLMessage(ACLMessage.INFORM);
-            ByteArrayOutputStream bo = new ByteArrayOutputStream();
-            ObjectOutputStream so = new ObjectOutputStream(bo);
 
-            so.writeObject(proc);
-            so.flush();
             msg.addReceiver(new AID("magpie_preferences", AID.ISLOCALNAME));
             msg.addReceiver(new AID("magpie_processesmonitor", AID.ISLOCALNAME));
-            msg.setContent("process:add:" + new String(Base64.getEncoder().encode(bo.toByteArray())));
+            msg.setContent("process:add:" + deserializeToBase64(proc));
             send(msg);
         } catch (IOException e) {
             e.printStackTrace();
@@ -123,6 +120,28 @@ public class PlayerAgent extends Agent {
         send(msg);
     }
 
+    public void broadcastTimeSlotRegister(TimeInterval interval) {
+        try {
+            ACLMessage msg = new ACLMessage(ACLMessage.INFORM);
+
+            msg.addReceiver(new AID("magpie_preferences", AID.ISLOCALNAME));
+            msg.addReceiver(new AID("magpie_time", AID.ISLOCALNAME));
+            msg.setContent("timeslot:add:" + deserializeToBase64(interval));
+            send(msg);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void broadcastTimeSlotUnregister(String slotName) {
+        ACLMessage msg = new ACLMessage(ACLMessage.INFORM);
+
+        msg.addReceiver(new AID("magpie_preferences", AID.ISLOCALNAME));
+        msg.addReceiver(new AID("magpie_time", AID.ISLOCALNAME));
+        msg.setContent("timeslot:remove:" + slotName);
+        send(msg);
+    }
+
     public void requestPlaylistExpansion() {
         ACLMessage msg = new ACLMessage(ACLMessage.REQUEST);
 
@@ -130,5 +149,14 @@ public class PlayerAgent extends Agent {
         msg.addReceiver(new AID("magpie_playlist", AID.ISLOCALNAME));
         send(msg);
         System.out.println("Player: Sent playlist expansion request.");
+    }
+
+    private String deserializeToBase64(Object obj) throws IOException {
+        ByteArrayOutputStream bo = new ByteArrayOutputStream();
+        ObjectOutputStream so = new ObjectOutputStream(bo);
+
+        so.writeObject(obj);
+        so.flush();
+        return new String(Base64.getEncoder().encode(bo.toByteArray()));
     }
 }

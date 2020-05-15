@@ -9,12 +9,9 @@ import ro.uvt.regisb.magpie.utils.TimeInterval;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.io.File;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
 
 public class PlayerGui extends JFrame {
     // From the .form
@@ -83,70 +80,53 @@ public class PlayerGui extends JFrame {
                 }
             }
         });
-        currentMoodBox.addActionListener(new ActionListener() { // Change global mood on configuration change.
-            public void actionPerformed(ActionEvent e) {
-                assert currentMoodBox.getSelectedItem() != null;
-                owner.broadcastNewMood(currentMoodBox.getSelectedItem().toString());
-            }
+        // Change global mood on configuration change.
+        currentMoodBox.addActionListener(e -> {
+            assert currentMoodBox.getSelectedItem() != null;
+            owner.broadcastNewMood(currentMoodBox.getSelectedItem().toString());
         });
-        playButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                if (mediaPlayer == null) {
-                    if (playList.getModel().getSize() == 0) {
-                        infoLabel.setText("Info: Downloading more titles.");
-                        owner.requestPlaylistExpansion();
-                    }
-                    if (playList.getSelectedValue() == null) {
-                        playList.setSelectedIndex(0);
-                    }
-                    Media hit = new Media(new File(playList.getSelectedValue().toString()).toURI().toString());
-
-                    mediaPlayer = autoPlayerFrom(hit);
+        playButton.addActionListener(e -> {
+            if (mediaPlayer == null) {
+                if (playList.getModel().getSize() == 0) {
+                    infoLabel.setText("Info: Downloading more titles.");
+                    owner.requestPlaylistExpansion();
                 }
-                mediaPlayer.play();
+                if (playList.getSelectedValue() == null) {
+                    playList.setSelectedIndex(0);
+                }
+                Media hit = new Media(new File(playList.getSelectedValue().toString()).toURI().toString());
+
+                mediaPlayer = autoPlayerFrom(hit);
             }
+            mediaPlayer.play();
         });
 
         // Final graphic setup.
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setContentPane(panel1);
         pack();
-        stopButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                mediaPlayer.stop();
-            }
-        });
-        pauseButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                mediaPlayer.pause();
-            }
-        });
-        processesNewButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                ProcessWatchlistDialog form = new ProcessWatchlistDialog();
+        stopButton.addActionListener(e -> mediaPlayer.stop());
+        pauseButton.addActionListener(e -> mediaPlayer.pause());
+        processesNewButton.addActionListener(e -> {
+            ProcessWatchlistDialog form = new ProcessWatchlistDialog();
 
-                if (form.showDialog() == JOptionPane.OK_OPTION) {
-                    ProcessAttributes proc = form.getProcessAttributes();
+            if (form.showDialog() == JOptionPane.OK_OPTION) {
+                ProcessAttributes proc = form.getProcessAttributes();
 
-                    if (proc.getName().isBlank()) {
-                        JOptionPane.showMessageDialog(null,
-                                "Missing process name.", "Monitor Process",
-                                JOptionPane.WARNING_MESSAGE);
-                    } else if (proc.getGenre().isEmpty() && proc.getFeel().isEmpty() && proc.getBpmTweak() == 0) {
-                        JOptionPane.showMessageDialog(null,
-                                "Missing process attributes.", "Monitor Process",
-                                JOptionPane.WARNING_MESSAGE);
-                    } else {
-                        ((DefaultListModel) processesList.getModel()).addElement(form.getProcessName());
-                        owner.broadcastProcessMonitored(proc);
-                    }
+                if (proc.getName().isBlank()) {
+                    JOptionPane.showMessageDialog(null,
+                            "Missing process name.", "Monitor Process",
+                            JOptionPane.WARNING_MESSAGE);
+                } else if (proc.getTags().areEmpty()) {
+                    JOptionPane.showMessageDialog(null,
+                            "Missing process attributes.", "Monitor Process",
+                            JOptionPane.WARNING_MESSAGE);
+                } else {
+                    ((DefaultListModel) processesList.getModel()).addElement(form.getProcessName());
+                    owner.broadcastProcessMonitored(proc);
                 }
-
             }
+
         });
         processesDeleteButton.addActionListener(e -> {
             if (processesList.getSelectedIndex() != -1) {
@@ -158,21 +138,27 @@ public class PlayerGui extends JFrame {
             TimeSlotDialog form = new TimeSlotDialog();
 
             if (form.showDialog() == JOptionPane.OK_OPTION) {
-                TimeInterval aled = form.getTimeInterval();
+                TimeInterval interval = form.getTimeInterval();
 
-                if (aled != null) {
-                    System.out.println(aled);
-                    try {
-                        System.out.println(aled.isTimeInInterval(new SimpleDateFormat("HH:mm").parse("18:00")));
-                        System.out.println(aled.isTimeInInterval(new SimpleDateFormat("HH:mm").parse("03:00")));
-                    } catch (ParseException exp) {
-                        exp.printStackTrace();
-                    }
+                if (interval == null) {
+                    JOptionPane.showMessageDialog(null,
+                            "Unable to create time slot.", "Time Slot Definition",
+                            JOptionPane.ERROR_MESSAGE);
+                } else if (interval.getTags().areEmpty()) {
+                    JOptionPane.showMessageDialog(null,
+                            "Missing slot attributes.", "Time Slot Definition",
+                            JOptionPane.WARNING_MESSAGE);
                 } else {
-                    System.out.println("null?!");
+                    ((DefaultListModel) timeSlotList.getModel()).addElement(interval.toString());
+                    owner.broadcastTimeSlotRegister(interval);
                 }
             }
-
+        });
+        timeSlotDeleteButton.addActionListener(e -> {
+            if (timeSlotList.getSelectedIndex() != -1) {
+                owner.broadcastTimeSlotUnregister((String) timeSlotList.getSelectedValue());
+                ((DefaultListModel) timeSlotList.getModel()).remove(timeSlotList.getSelectedIndex());
+            }
         });
     }
 

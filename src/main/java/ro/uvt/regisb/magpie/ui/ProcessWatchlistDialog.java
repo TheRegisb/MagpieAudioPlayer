@@ -91,34 +91,17 @@ public class ProcessWatchlistDialog extends JPanel {
         for (int i = 0; i != includeList.getModel().getSize(); i++) {
             String attrString = (String) includeList.getModel().getElementAt(i);
 
-            if (attrString.equals("Low BPM")) {
-                attrs.tweakBpm(-1);
-            } else if (attrString.equals("High BPM")) {
-                attrs.tweakBpm(1);
-            } else if (attrString.startsWith("Genre:")) {
-                attrs.addGenre(attrString.split(": ")[1], 1);
-            } else if (attrString.startsWith("Feel:")) {
-                attrs.addFeel(attrString.split(": ")[1], 1);
-            }
+            attrs.getTags().parse(attrString);
         }
         for (int i = 0; i != excludeList.getModel().getSize(); i++) {
             String attrString = (String) excludeList.getModel().getElementAt(i);
 
-            if (attrString.equals("Low BPM")) {
-                attrs.tweakBpm(1);
-            } else if (attrString.equals("High BPM")) {
-                attrs.tweakBpm(-1);
-            } else if (attrString.startsWith("Genre:")) {
-                attrs.addGenre(attrString.split(": ")[1], -1);
-            } else if (attrString.startsWith("Feel:")) {
-                attrs.addFeel(attrString.split(": ")[1], -1);
-            }
+            attrs.getTags().parse(attrString);
         }
         return attrs;
     }
 
     private void createUIComponents() {
-        // TODO: place custom component creation code here
         includeList = new JList<>(new DefaultListModel<>());
         excludeList = new JList<>(new DefaultListModel<>());
         tagsList = new JList<>(new DefaultListModel<>());
