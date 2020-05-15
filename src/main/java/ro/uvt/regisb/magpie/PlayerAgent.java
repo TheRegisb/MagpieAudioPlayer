@@ -68,6 +68,7 @@ public class PlayerAgent extends Agent {
             controller.createNewAgent("magpie_playlist", "ro.uvt.regisb.magpie.PlaylistAgent", null).start();
             controller.createNewAgent("magpie_contentmanager", "ro.uvt.regisb.magpie.ContentManagerAgent", new String[]{"local", "audiosample.sqlite.db"}).start(); // TODO change to variables
             controller.createNewAgent("magpie_processesmonitor", "ro.uvt.regisb.magpie.ProcessesAgent", null).start();
+            controller.createNewAgent("magpie_time", "ro.uvt.regisb.magpie.TimeAgent", null).start();
         } catch (ControllerException e) {
             e.printStackTrace();
             doDelete();

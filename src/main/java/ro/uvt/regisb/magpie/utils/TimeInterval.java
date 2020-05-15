@@ -17,8 +17,17 @@ public class TimeInterval implements Serializable {
         stopTime.setTime(new SimpleDateFormat("HH:mm").parse(stop));
     }
 
+    public TimeInterval(TimeInterval ti) {
+        this.startTime = ti.startTime;
+        this.stopTime = ti.stopTime;
+        this.isActive = ti.isActive;
+    }
+
     public boolean isTimeInInterval(Date time) {
         Calendar current = Calendar.getInstance();
+        boolean revertStart = false;
+        boolean revertStop = false;
+        boolean isIn = false;
 
         current.setTime(time);
         if (current.compareTo(stopTime) < 0) {
@@ -26,15 +35,18 @@ public class TimeInterval implements Serializable {
         }
         if (startTime.compareTo(stopTime) < 0) {
             startTime.add(Calendar.DATE, 1);
+            revertStart = true;
         }
-        if (current.before(startTime)) {
-            return false;
-        } else {
+        if (!current.before(startTime)) {
             if (current.after(stopTime)) {
                 stopTime.add(Calendar.DATE, 1);
+                revertStop = true;
             }
-            return current.before(stopTime);
+            isIn = current.before(stopTime);
         }
+        startTime.add(Calendar.DATE, (revertStart ? -1 : 0));
+        stopTime.add(Calendar.DATE, (revertStop ? -1 : 0));
+        return isIn;
     }
 
     public boolean equals(String ti) {
@@ -62,5 +74,12 @@ public class TimeInterval implements Serializable {
         return String.format("[%02d:%02d, %02d:%02d]",
                 startTime.get(Calendar.HOUR_OF_DAY), startTime.get(Calendar.MINUTE),
                 stopTime.get(Calendar.HOUR_OF_DAY), stopTime.get(Calendar.MINUTE));
+    }
+
+    public TimeInterval invert() {
+        TimeInterval inverse = new TimeInterval(this);
+
+        inverse.tags = inverse.tags.invert();
+        return inverse;
     }
 }

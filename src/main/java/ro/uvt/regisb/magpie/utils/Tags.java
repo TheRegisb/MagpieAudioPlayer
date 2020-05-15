@@ -132,7 +132,7 @@ public class Tags implements Serializable {
         for (Pair<String, Integer> g : genre) {
             sb.append('{').append(g.getKey()).append(", ").append(g.getValue()).append('}');
         }
-        sb.append("Feels: ");
+        sb.append("; Feels: ");
         for (Pair<String, Integer> f : feel) {
             sb.append('{').append(f.getKey()).append(", ").append(f.getValue()).append('}');
         }
