@@ -69,6 +69,7 @@ public class PlayerAgent extends Agent {
             controller.createNewAgent("magpie_contentmanager", "ro.uvt.regisb.magpie.ContentManagerAgent", new String[]{"local", "audiosample.sqlite.db"}).start(); // TODO change to variables
             controller.createNewAgent("magpie_processesmonitor", "ro.uvt.regisb.magpie.ProcessesAgent", null).start();
             controller.createNewAgent("magpie_time", "ro.uvt.regisb.magpie.TimeAgent", null).start();
+            controller.createNewAgent("magpie_mood", "ro.uvt.regisb.magpie.MoodAgent", null).start();
         } catch (ControllerException e) {
             e.printStackTrace();
             doDelete();
@@ -96,6 +97,7 @@ public class PlayerAgent extends Agent {
 
         msg.setContent("mood:" + mood);
         msg.addReceiver(new AID("magpie_preferences", AID.ISLOCALNAME));
+        msg.addReceiver(new AID("magpie_mood", AID.ISLOCALNAME));
         send(msg);
     }
 
