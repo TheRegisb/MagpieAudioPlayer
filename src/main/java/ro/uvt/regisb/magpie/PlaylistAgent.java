@@ -5,12 +5,11 @@ import jade.core.Agent;
 import jade.core.behaviours.CyclicBehaviour;
 import jade.lang.acl.ACLMessage;
 import org.apache.commons.lang3.tuple.Pair;
-import ro.uvt.regisb.magpie.utils.ProcessAttributes;
-import ro.uvt.regisb.magpie.utils.Tags;
-import ro.uvt.regisb.magpie.utils.TimeInterval;
-import ro.uvt.regisb.magpie.utils.WeightedMediaFilter;
+import ro.uvt.regisb.magpie.utils.*;
 
-import java.io.*;
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.ObjectInputStream;
 import java.util.Base64;
 
 public class PlaylistAgent extends Agent {
@@ -107,14 +106,10 @@ public class PlaylistAgent extends Agent {
         try {
             int totalToBeAdded = Integer.parseInt(msg.getContent().split(":")[1]);
             ACLMessage contentRequest = new ACLMessage(ACLMessage.REQUEST);
-            ByteArrayOutputStream bo = new ByteArrayOutputStream();
-            ObjectOutputStream so = new ObjectOutputStream(bo);
 
-            so.writeObject(filter);
-            so.flush();
             contentRequest.addReceiver(new AID("magpie_contentmanager", AID.ISLOCALNAME));
             // Writing the weighed filter object as a safe base 64 string for streaming over networks.
-            contentRequest.setContent(String.format("content:%d:%s", totalToBeAdded, new String(Base64.getEncoder().encode(bo.toByteArray()))));
+            contentRequest.setContent(String.format("content:%d:%s", totalToBeAdded, IOUtil.serializeToBase64(filter)));
             send(contentRequest);
         } catch (NumberFormatException e) {
             ACLMessage res = new ACLMessage(ACLMessage.NOT_UNDERSTOOD);

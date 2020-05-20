@@ -5,12 +5,16 @@ import jade.core.Agent;
 import jade.core.behaviours.CyclicBehaviour;
 import jade.core.behaviours.TickerBehaviour;
 import jade.lang.acl.ACLMessage;
+import ro.uvt.regisb.magpie.utils.IOUtil;
 import ro.uvt.regisb.magpie.utils.TimeInterval;
 
-import java.io.*;
+import java.io.IOException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.List;
 
 public class TimeAgent extends Agent {
     private List<TimeInterval> timeSlots = new ArrayList<>();
@@ -28,12 +32,7 @@ public class TimeAgent extends Agent {
                     if (msg.getPerformative() == ACLMessage.INFORM
                             && msg.getContent().startsWith("timeslot:add:")) {
                         try {
-                            String serializedTimeInterval = msg.getContent().split(":")[2];
-                            byte[] b = Base64.getDecoder().decode(serializedTimeInterval.getBytes());
-                            ByteArrayInputStream bi = new ByteArrayInputStream(b);
-                            ObjectInputStream si = new ObjectInputStream(bi);
-
-                            timeSlots.add((TimeInterval) si.readObject());
+                            timeSlots.add((TimeInterval) IOUtil.deserializeFromBase64(msg.getContent().split(":")[2]));
                         } catch (IOException | ClassNotFoundException e) {
                             e.printStackTrace();
                             ACLMessage res = new ACLMessage(ACLMessage.NOT_UNDERSTOOD);
@@ -95,13 +94,9 @@ public class TimeAgent extends Agent {
     private void notifyPlaylistAgent(TimeInterval time, boolean deleted) {
         try {
             ACLMessage msg = new ACLMessage(ACLMessage.PROPOSE);
-            ByteArrayOutputStream bo = new ByteArrayOutputStream();
-            ObjectOutputStream so = new ObjectOutputStream(bo);
 
-            so.writeObject((deleted ? time.invert() : time));
-            so.flush();
             msg.addReceiver(new AID("magpie_playlist", AID.ISLOCALNAME));
-            msg.setContent("timeslot:" + new String(Base64.getEncoder().encode(bo.toByteArray())));
+            msg.setContent("timeslot:" + IOUtil.serializeToBase64(time));
             send(msg);
         } catch (IOException e) {
             e.printStackTrace();

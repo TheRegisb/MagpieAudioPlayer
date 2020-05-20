@@ -182,19 +182,16 @@ public class PlayerGui extends JFrame {
     private MediaPlayer autoPlayerFrom(Media hit) {
         mediaPlayer = new MediaPlayer(hit);
 
-        mediaPlayer.setOnEndOfMedia(new Runnable() {
-            @Override
-            public void run() {
-                if (playList.getSelectedIndex() + 1 == playList.getModel().getSize()) {
-                    infoLabel.setText("Info: Downloading more titles.");
-                    owner.requestPlaylistExpansion();
-                } else { // Play next music in list
-                    playList.setSelectedIndex(playList.getSelectedIndex() + 1);
-                    Media hit = new Media(new File(playList.getSelectedValue().toString()).toURI().toString());
+        mediaPlayer.setOnEndOfMedia(() -> {
+            if (playList.getSelectedIndex() + 1 == playList.getModel().getSize()) {
+                infoLabel.setText("Info: Downloading more titles.");
+                owner.requestPlaylistExpansion();
+            } else { // Play next music in list
+                playList.setSelectedIndex(playList.getSelectedIndex() + 1);
+                Media hit1 = new Media(new File(playList.getSelectedValue().toString()).toURI().toString());
 
-                    mediaPlayer = new MediaPlayer(hit);
-                    mediaPlayer.play();
-                }
+                mediaPlayer = new MediaPlayer(hit1);
+                mediaPlayer.play();
             }
         });
         return mediaPlayer;

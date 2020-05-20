@@ -9,10 +9,13 @@ import jade.wrapper.PlatformController;
 import javafx.embed.swing.JFXPanel;
 import ro.uvt.regisb.magpie.ui.PlayerGui;
 import ro.uvt.regisb.magpie.utils.Configuration;
+import ro.uvt.regisb.magpie.utils.IOUtil;
 import ro.uvt.regisb.magpie.utils.ProcessAttributes;
 import ro.uvt.regisb.magpie.utils.TimeInterval;
 
-import java.io.*;
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.ObjectInputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Base64;
@@ -40,7 +43,7 @@ public class PlayerAgent extends Agent {
                             ByteArrayInputStream bi = new ByteArrayInputStream(b);
                             ObjectInputStream si = new ObjectInputStream(bi);
 
-                            Configuration conf = (Configuration) si.readObject();
+                            Configuration conf = (Configuration) IOUtil.deserializeFromBase64(serializedConf);
 
                             if (gui != null) {
                                 gui.getCurrentMoodBox().setSelectedItem(conf.getMood());
@@ -107,7 +110,7 @@ public class PlayerAgent extends Agent {
 
             msg.addReceiver(new AID("magpie_preferences", AID.ISLOCALNAME));
             msg.addReceiver(new AID("magpie_processesmonitor", AID.ISLOCALNAME));
-            msg.setContent("process:add:" + deserializeToBase64(proc));
+            msg.setContent("process:add:" + IOUtil.serializeToBase64(proc));
             send(msg);
         } catch (IOException e) {
             e.printStackTrace();
@@ -129,7 +132,7 @@ public class PlayerAgent extends Agent {
 
             msg.addReceiver(new AID("magpie_preferences", AID.ISLOCALNAME));
             msg.addReceiver(new AID("magpie_time", AID.ISLOCALNAME));
-            msg.setContent("timeslot:add:" + deserializeToBase64(interval));
+            msg.setContent("timeslot:add:" + IOUtil.serializeToBase64(interval));
             send(msg);
         } catch (IOException e) {
             e.printStackTrace();
@@ -152,14 +155,5 @@ public class PlayerAgent extends Agent {
         msg.addReceiver(new AID("magpie_playlist", AID.ISLOCALNAME));
         send(msg);
         System.out.println("Player: Sent playlist expansion request.");
-    }
-
-    private String deserializeToBase64(Object obj) throws IOException {
-        ByteArrayOutputStream bo = new ByteArrayOutputStream();
-        ObjectOutputStream so = new ObjectOutputStream(bo);
-
-        so.writeObject(obj);
-        so.flush();
-        return new String(Base64.getEncoder().encode(bo.toByteArray()));
     }
 }

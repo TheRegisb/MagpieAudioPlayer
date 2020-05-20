@@ -18,6 +18,8 @@ public class Tags implements Serializable {
     }
 
     public Tags(Tags tags) {
+        feel = tags.feel;
+        genre = tags.genre;
         bpmTweak = tags.bpmTweak;
     }
 

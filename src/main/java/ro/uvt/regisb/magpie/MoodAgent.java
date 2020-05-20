@@ -27,7 +27,7 @@ public class MoodAgent extends Agent {
                                 response.setContent("mood:-2:" + previousMood);
                                 previousMood = -2;
                                 break;
-                            case "Neurtal":
+                            case "Neutral":
                                 response.setContent("mood:0:" + previousMood);
                                 previousMood = 0;
                                 break;

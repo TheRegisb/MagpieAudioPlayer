@@ -21,6 +21,7 @@ public class TimeInterval implements Serializable {
         this.startTime = ti.startTime;
         this.stopTime = ti.stopTime;
         this.isActive = ti.isActive;
+        this.tags = ti.tags;
     }
 
     public boolean isTimeInInterval(Date time) {

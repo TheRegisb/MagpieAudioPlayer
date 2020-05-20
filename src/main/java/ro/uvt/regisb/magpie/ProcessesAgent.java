@@ -5,11 +5,11 @@ import jade.core.Agent;
 import jade.core.behaviours.CyclicBehaviour;
 import jade.core.behaviours.TickerBehaviour;
 import jade.lang.acl.ACLMessage;
+import ro.uvt.regisb.magpie.utils.IOUtil;
 import ro.uvt.regisb.magpie.utils.ProcessAttributes;
 
-import java.io.*;
+import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Base64;
 import java.util.List;
 
 public class ProcessesAgent extends Agent {
@@ -50,12 +50,7 @@ public class ProcessesAgent extends Agent {
                     if (msg.getPerformative() == ACLMessage.INFORM
                             && msg.getContent().startsWith("process:add")) {
                         try {
-                            String serializedProcAttrs = msg.getContent().split(":")[2];
-                            byte[] b = Base64.getDecoder().decode(serializedProcAttrs.getBytes());
-                            ByteArrayInputStream bi = new ByteArrayInputStream(b);
-                            ObjectInputStream si = new ObjectInputStream(bi);
-
-                            watchlist.add((ProcessAttributes) si.readObject());
+                            watchlist.add((ProcessAttributes) IOUtil.deserializeFromBase64(msg.getContent().split(":")[2]));
                         } catch (IOException | ClassNotFoundException e) {
                             e.printStackTrace();
                             ACLMessage res = new ACLMessage(ACLMessage.NOT_UNDERSTOOD);
@@ -108,13 +103,9 @@ public class ProcessesAgent extends Agent {
         }
         try {
             ACLMessage msg = new ACLMessage(ACLMessage.PROPOSE);
-            ByteArrayOutputStream bo = new ByteArrayOutputStream();
-            ObjectOutputStream so = new ObjectOutputStream(bo);
 
-            so.writeObject((deleted ? processAttributes.invert() : processAttributes));
-            so.flush();
             msg.addReceiver(new AID("magpie_playlist", AID.ISLOCALNAME));
-            msg.setContent("process:" + new String(Base64.getEncoder().encode(bo.toByteArray())));
+            msg.setContent("process:" + IOUtil.serializeToBase64(processAttributes));
             send(msg);
         } catch (IOException e) {
             e.printStackTrace();

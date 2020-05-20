@@ -4,15 +4,13 @@ import jade.core.Agent;
 import jade.core.behaviours.CyclicBehaviour;
 import jade.lang.acl.ACLMessage;
 import ro.uvt.regisb.magpie.utils.Configuration;
+import ro.uvt.regisb.magpie.utils.IOUtil;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.ObjectOutputStream;
-import java.util.Base64;
 import java.util.prefs.Preferences;
 
 public class PreferencesAgent extends Agent {
-    Preferences magpiePrefs = Preferences.userRoot().node("ro/uvt/regisb/magpie/preferences"); // For Windows, HKEY_LOCAL_MACHINE\SOFTWARE\JavaSoft\Prefs must be created by hand
+    private Preferences magpiePrefs = Preferences.userRoot().node("ro/uvt/regisb/magpie/preferences"); // For Windows, HKEY_LOCAL_MACHINE\SOFTWARE\JavaSoft\Prefs must be created by hand
 
     @Override
     protected void setup() {
@@ -32,12 +30,7 @@ public class PreferencesAgent extends Agent {
                         String oldConfSerialized = "";
 
                         try {
-                            ByteArrayOutputStream bo = new ByteArrayOutputStream();
-                            ObjectOutputStream so = new ObjectOutputStream(bo);
-
-                            so.writeObject(oldConf);
-                            so.flush();
-                            oldConfSerialized = new String(Base64.getEncoder().encode(bo.toByteArray()));
+                            oldConfSerialized = IOUtil.serializeToBase64(oldConf);
                         } catch (IOException e) {
                             e.printStackTrace();
                         }
@@ -54,9 +47,8 @@ public class PreferencesAgent extends Agent {
         });
     }
 
-    protected void changeCurrentMood(String mood) {
+    private void changeCurrentMood(String mood) {
         magpiePrefs.put("mood", mood);
-        // TODO notifiy the MoodAgent
     }
 
     // TODO add procs watchlist and time slot

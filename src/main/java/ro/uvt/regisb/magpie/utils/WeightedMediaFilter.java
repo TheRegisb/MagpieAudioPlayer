@@ -19,8 +19,8 @@ public class WeightedMediaFilter implements Serializable {
     private static final long serialVersionUID = 1L;
     private List<Pair<String, Integer>> genre;
     private List<Pair<String, Integer>> feel;
-    public int lowBPMCount;
-    public int highBPMCount;
+    private int lowBPMCount;
+    private int highBPMCount;
 
     // Default constructor
     public WeightedMediaFilter() {
@@ -28,7 +28,7 @@ public class WeightedMediaFilter implements Serializable {
         feel = new ArrayList<>();
     }
 
-    public WeightedMediaFilter(WeightedMediaFilter filter) {
+    private WeightedMediaFilter(WeightedMediaFilter filter) {
         this.genre = new ArrayList<>(filter.genre);
         this.feel = new ArrayList<>(filter.feel);
         this.lowBPMCount = filter.lowBPMCount;
