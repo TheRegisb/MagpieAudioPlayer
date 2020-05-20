@@ -36,7 +36,7 @@ public class ProcessAttributes implements Serializable {
 
     @Override
     public String toString() {
-        return "Process name: " + name + "; " + tags.toString();
+        return "Process name: " + name + "; Active: " + isActive + "; Tags: " + tags.toString();
     }
 
     public boolean isActive() {

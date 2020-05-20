@@ -1,5 +1,6 @@
 package ro.uvt.regisb.magpie;
 
+import jade.core.AID;
 import jade.core.Agent;
 import jade.core.behaviours.CyclicBehaviour;
 import jade.core.behaviours.TickerBehaviour;
@@ -76,9 +77,6 @@ public class TimeAgent extends Agent {
                     Date currentTime = new SimpleDateFormat("HH:mm").parse(String.format("%02d:%02d", calendar.get(Calendar.HOUR_OF_DAY), calendar.get(Calendar.MINUTE)));
 
                     for (TimeInterval ti : timeSlots) {
-                        System.out.println("TA: for: " + ti
-                                + ": active: " + ti.isActive()
-                                + ": include " + currentTime + ": " + ti.isTimeInInterval(currentTime));
                         if (ti.isTimeInInterval(currentTime) && !ti.isActive()) { // In time interval but effect not already applied
                             ti.setActive(true);
                             notifyPlaylistAgent(ti, false);
@@ -95,7 +93,6 @@ public class TimeAgent extends Agent {
     }
 
     private void notifyPlaylistAgent(TimeInterval time, boolean deleted) {
-        System.out.println("TA: npa: " + (deleted ? time.invert() : time) + "; deleted: " + deleted);
         try {
             ACLMessage msg = new ACLMessage(ACLMessage.PROPOSE);
             ByteArrayOutputStream bo = new ByteArrayOutputStream();
@@ -103,6 +100,7 @@ public class TimeAgent extends Agent {
 
             so.writeObject((deleted ? time.invert() : time));
             so.flush();
+            msg.addReceiver(new AID("magpie_playlist", AID.ISLOCALNAME));
             msg.setContent("timeslot:" + new String(Base64.getEncoder().encode(bo.toByteArray())));
             send(msg);
         } catch (IOException e) {

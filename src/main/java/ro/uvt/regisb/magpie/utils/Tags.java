@@ -1,5 +1,6 @@
 package ro.uvt.regisb.magpie.utils;
 
+import org.apache.commons.lang3.tuple.MutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.io.Serializable;
@@ -40,7 +41,7 @@ public class Tags implements Serializable {
                 return;
             }
         }
-        genre.add(Pair.of(name, weight));
+        genre.add(MutablePair.of(name, weight));
         this.genre.sort((o1, o2) -> {
             if (Math.abs(o1.getValue()) == Math.abs(o2.getValue())) { // When value are equals
                 return o1.getKey().compareTo(o2.getKey());            // sorts by name (e.g. {"action", 0) > {"calm", 0}
@@ -56,7 +57,7 @@ public class Tags implements Serializable {
                 return;
             }
         }
-        feel.add(Pair.of(name, weight));
+        feel.add(MutablePair.of(name, weight));
         this.feel.sort((o1, o2) -> {
             if (Math.abs(o1.getValue()) == Math.abs(o2.getValue())) { // When value are equals
                 return o1.getKey().compareTo(o2.getKey());            // sorts by name (e.g. {"action", 0) > {"calm", 0}

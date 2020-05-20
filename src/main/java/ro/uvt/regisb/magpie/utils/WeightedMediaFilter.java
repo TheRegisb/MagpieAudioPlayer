@@ -1,5 +1,6 @@
 package ro.uvt.regisb.magpie.utils;
 
+import org.apache.commons.lang3.tuple.MutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.io.Serializable;
@@ -18,8 +19,8 @@ public class WeightedMediaFilter implements Serializable {
     private static final long serialVersionUID = 1L;
     private List<Pair<String, Integer>> genre;
     private List<Pair<String, Integer>> feel;
-    private int lowBPMCount;
-    private int highBPMCount;
+    public int lowBPMCount;
+    public int highBPMCount;
 
     // Default constructor
     public WeightedMediaFilter() {
@@ -47,7 +48,7 @@ public class WeightedMediaFilter implements Serializable {
             }
         }
         if (!alreadyPresent) {
-            this.genre.add(Pair.of(genre, count));
+            this.genre.add(MutablePair.of(genre, count));
         }
         this.genre.sort((o1, o2) -> {
             if (Math.abs(o1.getValue()) == Math.abs(o2.getValue())) {
@@ -55,6 +56,7 @@ public class WeightedMediaFilter implements Serializable {
             }
             return (Math.abs(o1.getValue()) > Math.abs(o2.getValue()) ? -1 : 1);
         });
+        this.genre.removeIf(e -> e.getValue() == 0);
     }
 
     public void addGenre(String genre) {
@@ -72,7 +74,7 @@ public class WeightedMediaFilter implements Serializable {
             }
         }
         if (!alreadyPresent) {
-            this.feel.add(Pair.of(feel, count));
+            this.feel.add(MutablePair.of(feel, count));
         }
         this.feel.sort((o1, o2) -> {
             if (Math.abs(o1.getValue()) == Math.abs(o2.getValue())) {
@@ -80,6 +82,7 @@ public class WeightedMediaFilter implements Serializable {
             }
             return (Math.abs(o1.getValue()) > Math.abs(o2.getValue()) ? -1 : 1);
         });
+        this.feel.removeIf(e -> e.getValue() == 0);
     }
 
     public void addFeel(String feel) {
@@ -143,5 +146,23 @@ public class WeightedMediaFilter implements Serializable {
 
     public List<Pair<String, Integer>> getFeel() {
         return feel;
+    }
+
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+
+        sb.append("Feel: ");
+        for (Pair e : feel) {
+            sb.append('{').append(e.getKey()).append(", ").append(e.getValue()).append("}");
+        }
+        sb.append(", Genre: ");
+        for (Pair e : genre) {
+            sb.append('{').append(e.getKey()).append(", ").append(e.getValue()).append("}");
+        }
+        sb.append(", BPM: {low: ").append(lowBPMCount)
+                .append(", high: ").append(highBPMCount)
+                .append(", desc: ").append(getBPM().toString()).append('}');
+        return sb.toString();
     }
 }

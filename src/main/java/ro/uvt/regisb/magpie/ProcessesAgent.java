@@ -1,5 +1,6 @@
 package ro.uvt.regisb.magpie;
 
+import jade.core.AID;
 import jade.core.Agent;
 import jade.core.behaviours.CyclicBehaviour;
 import jade.core.behaviours.TickerBehaviour;
@@ -24,6 +25,7 @@ public class ProcessesAgent extends Agent {
                 ProcessHandle.allProcesses().filter(ProcessHandle::isAlive).forEach(ph -> {
                     if (ph.info().command().isPresent() // If under watchlist and not already monitored
                             && processInWatchlist(ph.info().command().get())) {
+
                         ProcessAttributes pa = getProcessAttributesByName(ph.info().command().get());
 
                         if (pa != null && !pa.isActive()) {
@@ -44,6 +46,7 @@ public class ProcessesAgent extends Agent {
                 ACLMessage msg = receive();
 
                 if (msg != null) {
+                    System.out.println("PrA: " + msg.getContent());
                     if (msg.getPerformative() == ACLMessage.INFORM
                             && msg.getContent().startsWith("process:add")) {
                         try {
@@ -103,7 +106,6 @@ public class ProcessesAgent extends Agent {
         if (deleted && !processInWatchlist(processAttributes.getName())) { // Process was unmonitored while the process was running.
             return;
         }
-        System.out.println("PA: Proc: " + (deleted ? processAttributes.invert() : processAttributes) + ": deleted: " + deleted);
         try {
             ACLMessage msg = new ACLMessage(ACLMessage.PROPOSE);
             ByteArrayOutputStream bo = new ByteArrayOutputStream();
@@ -111,6 +113,7 @@ public class ProcessesAgent extends Agent {
 
             so.writeObject((deleted ? processAttributes.invert() : processAttributes));
             so.flush();
+            msg.addReceiver(new AID("magpie_playlist", AID.ISLOCALNAME));
             msg.setContent("process:" + new String(Base64.getEncoder().encode(bo.toByteArray())));
             send(msg);
         } catch (IOException e) {
