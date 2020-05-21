@@ -2,15 +2,20 @@ package ro.uvt.regisb.magpie.ui;
 
 import javafx.scene.media.Media;
 import javafx.scene.media.MediaPlayer;
+import javafx.util.Duration;
 import ro.uvt.regisb.magpie.PlayerAgent;
 import ro.uvt.regisb.magpie.utils.ProcessAttributes;
 import ro.uvt.regisb.magpie.utils.TimeInterval;
 
 import javax.swing.*;
+import javax.swing.event.ListDataEvent;
+import javax.swing.event.ListDataListener;
+import javax.swing.plaf.basic.BasicSliderUI;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
 import java.io.File;
 
 public class PlayerGui extends JFrame {
@@ -23,7 +28,7 @@ public class PlayerGui extends JFrame {
     private JButton nextButton;
     private JTextPane playlistTextPane;
     private JTabbedPane tabbedPane1;
-    private JList playList;
+    private JList playList = new JList<>(new DefaultListModel<>());
     private JLabel currentMoodLabel;
     private JComboBox currentMoodBox;
     private JList timeSlotList;
@@ -35,7 +40,13 @@ public class PlayerGui extends JFrame {
     private JLabel infoLabel; // todo hide after set amount of time
     private JButton timeSlotDeleteButton;
     private JButton processesDeleteButton;
+    private JSlider volumeSlider;
+    private JSlider musicProgressSlider;
+    private JScrollPane playlistScrollPane;
+    private JSpinner batchSizeSpinner;
     private String onStopPressed;
+
+    private boolean sliderDragged = false;
 
     protected PlayerAgent owner;
     protected MediaPlayer mediaPlayer = null;
@@ -57,7 +68,8 @@ public class PlayerGui extends JFrame {
         fileMenu.add(exitItem);
         menuBar.add(fileMenu);
         setJMenuBar(menuBar);
-
+        playList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        playlistScrollPane.setViewportView(playList);
         // Changing default icon.
         setIconImage(Toolkit.getDefaultToolkit().getImage(getClass().getResource("/magpie_icon.png")));
 
@@ -76,35 +88,81 @@ public class PlayerGui extends JFrame {
                     Media hit = new Media(new File(playList.getSelectedValue().toString()).toURI().toString());
 
                     mediaPlayer = autoPlayerFrom(hit);
+                    mediaPlayer.setVolume((double) volumeSlider.getValue() / volumeSlider.getMaximum());
                     mediaPlayer.play();
                 }
             }
         });
-        // Change global mood on configuration change.
+        playList.getModel().addListDataListener(new ListDataListener() {
+            @Override
+            public void intervalAdded(ListDataEvent e) {
+                if (playList.getSelectedValue() == null) {
+                    playList.setSelectedIndex(0);
+                }
+                if (mediaPlayer == null || mediaPlayer.getStatus() == MediaPlayer.Status.STOPPED) {
+                    playList.setSelectedIndex(playList.getSelectedIndex() + 1);
+                    Media hit = new Media(new File(playList.getSelectedValue().toString()).toURI().toString());
+
+                    mediaPlayer = autoPlayerFrom(hit);
+                    mediaPlayer.setVolume((double) volumeSlider.getValue() / volumeSlider.getMaximum());
+                    mediaPlayer.play();
+                }
+            }
+
+            @Override
+            public void intervalRemoved(ListDataEvent e) {
+            }
+
+            @Override
+            public void contentsChanged(ListDataEvent e) {
+            }
+        });
+        nextButton.addActionListener(e -> {
+            if (playList.getSelectedIndex() + 1 >= playList.getModel().getSize() - 1) { // One or zero medias left
+                owner.requestPlaylistExpansion();
+            }
+            if (mediaPlayer != null && playList.getSelectedIndex() != playList.getModel().getSize() - 1) {
+                playList.setSelectedIndex(playList.getSelectedValue() == null ? 0 : playList.getSelectedIndex() + 1);
+                mediaPlayer.stop();
+                Media hit = new Media(new File(playList.getSelectedValue().toString()).toURI().toString());
+
+                mediaPlayer = autoPlayerFrom(hit);
+                mediaPlayer.setVolume((double) volumeSlider.getValue() / volumeSlider.getMaximum());
+                mediaPlayer.play();
+            }
+        });
+        previousButton.addActionListener(e -> {
+            if (playList.getSelectedValue() == null) {
+                playList.setSelectedIndex(0);
+            }
+            if (mediaPlayer != null) {
+                playList.setSelectedIndex(playList.getSelectedIndex() == 0 ? 0 : playList.getSelectedIndex() - 1);
+                mediaPlayer.stop();
+                Media hit = new Media(new File(playList.getSelectedValue().toString()).toURI().toString());
+
+                mediaPlayer = autoPlayerFrom(hit);
+                mediaPlayer.setVolume((double) volumeSlider.getValue() / volumeSlider.getMaximum());
+                mediaPlayer.play();
+            }
+        });
         currentMoodBox.addActionListener(e -> {
             assert currentMoodBox.getSelectedItem() != null;
             owner.broadcastNewMood(currentMoodBox.getSelectedItem().toString());
         });
         playButton.addActionListener(e -> {
             if (mediaPlayer == null) {
-                if (playList.getModel().getSize() == 0) {
+                if (playList.getSelectedIndex() + 1 >= playList.getModel().getSize() - 1) { // One or zero medias left
                     infoLabel.setText("Info: Downloading more titles.");
                     owner.requestPlaylistExpansion();
-                }
-                if (playList.getSelectedValue() == null) {
-                    playList.setSelectedIndex(0);
+                    return;
                 }
                 Media hit = new Media(new File(playList.getSelectedValue().toString()).toURI().toString());
 
                 mediaPlayer = autoPlayerFrom(hit);
+                mediaPlayer.setVolume((double) volumeSlider.getValue() / volumeSlider.getMaximum());
             }
             mediaPlayer.play();
         });
-
-        // Final graphic setup.
-        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setContentPane(panel1);
-        pack();
         stopButton.addActionListener(e -> mediaPlayer.stop());
         pauseButton.addActionListener(e -> mediaPlayer.pause());
         processesNewButton.addActionListener(e -> {
@@ -160,6 +218,51 @@ public class PlayerGui extends JFrame {
                 ((DefaultListModel) timeSlotList.getModel()).remove(timeSlotList.getSelectedIndex());
             }
         });
+        volumeSlider.addChangeListener(evt -> {
+            if (!sliderDragged) {
+                mediaPlayer.setVolume((double) volumeSlider.getValue() / volumeSlider.getMaximum());
+            }
+        });
+        musicProgressSlider.addMouseListener(new MouseListener() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                sliderDragged = true;
+            }
+
+            @Override
+            public void mousePressed(MouseEvent e) {
+                sliderDragged = true;
+                BasicSliderUI ui = (BasicSliderUI) musicProgressSlider.getUI();
+                musicProgressSlider.setValue(ui.valueForXPosition(e.getX()));
+            }
+
+            @Override
+            public void mouseReleased(MouseEvent e) {
+                if (mediaPlayer != null) {
+                    BasicSliderUI ui = (BasicSliderUI) musicProgressSlider.getUI();
+                    musicProgressSlider.setValue(ui.valueForXPosition(e.getX()));
+                    mediaPlayer.seek(Duration.seconds(ui.valueForXPosition(e.getX())));
+                }
+                sliderDragged = false;
+            }
+
+            @Override
+            public void mouseEntered(MouseEvent e) {
+
+            }
+
+            @Override
+            public void mouseExited(MouseEvent e) {
+
+            }
+        });
+
+        // Final graphic setup.
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setContentPane(panel1);
+        pack();
+
+
     }
 
     public JComboBox getCurrentMoodBox() {
@@ -192,6 +295,7 @@ public class PlayerGui extends JFrame {
 
         mediaPlayer.setOnEndOfMedia(() -> {
             if (playList.getSelectedIndex() + 1 == playList.getModel().getSize()) {
+                mediaPlayer.stop();
                 infoLabel.setText("Info: Downloading more titles.");
                 owner.requestPlaylistExpansion();
             } else { // Play next music in list
@@ -202,11 +306,15 @@ public class PlayerGui extends JFrame {
                 mediaPlayer.play();
             }
         });
+        mediaPlayer.currentTimeProperty().addListener(e -> {
+            musicProgressSlider.setValue((int) (100 * mediaPlayer.getCurrentTime().toSeconds() / mediaPlayer.getTotalDuration().toSeconds()));
+        });
         return mediaPlayer;
     }
 
     private void createUIComponents() {
         processesList = new JList<>(new DefaultListModel<>());
         timeSlotList = new JList<>(new DefaultListModel<>());
+        batchSizeSpinner = new JSpinner(new SpinnerNumberModel(3, 1, 9, 1));
     }
 }

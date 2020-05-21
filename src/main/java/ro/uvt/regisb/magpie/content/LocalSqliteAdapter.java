@@ -97,6 +97,7 @@ public class LocalSqliteAdapter implements MediaRetriever {
                 sb.append("low_bpm = 0 ");
                 break;
             case NEUTRAL:
+                sb.append("TRUE ");
                 break;
             case NOT_ENERGETIC:
                 sb.append("high_bpm = 0 ");
