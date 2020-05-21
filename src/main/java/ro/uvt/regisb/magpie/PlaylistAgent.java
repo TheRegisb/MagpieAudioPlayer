@@ -26,7 +26,6 @@ public class PlaylistAgent extends Agent {
                 ACLMessage msg = receive();
 
                 if (msg != null) {
-                    System.out.println("PA:" + msg.getContent());
                     // Playlist expansion requested
                     if (msg.getPerformative() == ACLMessage.REQUEST
                             && msg.getContent().matches("^expand:\\d+$")) { // At least a single digit expected
@@ -67,7 +66,6 @@ public class PlaylistAgent extends Agent {
                             applyTags(pa.getTags());
                         }
                     }
-                    System.out.println("PA: " + filter.toString());
                 } else {
                     block();
                 }

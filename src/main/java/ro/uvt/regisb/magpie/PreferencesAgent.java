@@ -74,8 +74,8 @@ public class PreferencesAgent extends Agent {
                     }
                     // Removing time slot
                     else if (msg.getPerformative() == ACLMessage.INFORM
-                            && msg.getContent().startsWith("timeslot:remove:")) {
-                        if (conf.removeTimeIntervalByName(msg.getContent().split(":")[2])) {
+                            && msg.getContent().matches("^timeslot:remove:\\[[01]\\d:[0-5]\\d, [01]\\d:[0-5]\\d]$")) { // timeslot is like [03:40, 13:20]
+                        if (conf.removeTimeIntervalByName(msg.getContent().substring(16))) {
                             exportTimeIntervals();
                         }
                     }

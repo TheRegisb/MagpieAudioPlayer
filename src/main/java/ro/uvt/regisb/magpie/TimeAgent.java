@@ -5,6 +5,7 @@ import jade.core.Agent;
 import jade.core.behaviours.CyclicBehaviour;
 import jade.core.behaviours.TickerBehaviour;
 import jade.lang.acl.ACLMessage;
+import ro.uvt.regisb.magpie.utils.Configuration;
 import ro.uvt.regisb.magpie.utils.IOUtil;
 import ro.uvt.regisb.magpie.utils.TimeInterval;
 
@@ -42,7 +43,7 @@ public class TimeAgent extends Agent {
                             send(res);
                         }
                     } else if (msg.getPerformative() == ACLMessage.INFORM
-                            && msg.getContent().startsWith("timeslot:remove:")) {
+                            && msg.getContent().matches("^timeslot:remove:\\[[01]\\d:[0-5]\\d [01]\\d:[0-5]\\d]$")) {
                         String slotName = msg.getContent().substring(16);
 
                         for (int i = 0; i != timeSlots.size(); i++) {
@@ -62,6 +63,21 @@ public class TimeAgent extends Agent {
                         res.setContent("timeslot:remove:unregistered");
                         send(res);
                     }
+                    // Reacting to a configuration proposal
+                    else if (msg.getPerformative() == ACLMessage.INFORM
+                            && msg.getContent().matches("^conf:.*$")) {
+                        try {
+                            applyConfiguration((Configuration) IOUtil.deserializeFromBase64(msg.getContent().split(":")[1]));
+                        } catch (IOException | ClassNotFoundException e) {
+                            ACLMessage res = new ACLMessage(ACLMessage.NOT_UNDERSTOOD);
+
+                            res.setContent("configuration:unknown");
+                            res.addReceiver(msg.getSender());
+                            send(msg);
+                            e.printStackTrace();
+                        }
+                    }
+
                 } else {
                     block();
                 }
@@ -89,6 +105,15 @@ public class TimeAgent extends Agent {
                 }
             }
         });
+        ACLMessage confRequest = new ACLMessage(ACLMessage.REQUEST);
+
+        confRequest.setContent("configuration");
+        confRequest.addReceiver(new AID("magpie_preferences", AID.ISLOCALNAME));
+        send(confRequest);
+    }
+
+    private void applyConfiguration(Configuration conf) {
+        timeSlots.addAll(conf.getTimeIntervals());
     }
 
     private void notifyPlaylistAgent(TimeInterval time, boolean deleted) {
@@ -96,7 +121,7 @@ public class TimeAgent extends Agent {
             ACLMessage msg = new ACLMessage(ACLMessage.PROPOSE);
 
             msg.addReceiver(new AID("magpie_playlist", AID.ISLOCALNAME));
-            msg.setContent("timeslot:" + IOUtil.serializeToBase64(time));
+            msg.setContent("timeslot:" + IOUtil.serializeToBase64((deleted ? time.invert() : time)));
             send(msg);
         } catch (IOException e) {
             e.printStackTrace();

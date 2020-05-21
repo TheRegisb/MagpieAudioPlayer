@@ -13,12 +13,9 @@ import ro.uvt.regisb.magpie.utils.IOUtil;
 import ro.uvt.regisb.magpie.utils.ProcessAttributes;
 import ro.uvt.regisb.magpie.utils.TimeInterval;
 
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.io.ObjectInputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Base64;
 
 public class PlayerAgent extends Agent {
     final JFXPanel jfxPanel = new JFXPanel();
@@ -39,15 +36,10 @@ public class PlayerAgent extends Agent {
                         String serializedConf = msg.getContent().split(":")[1];
 
                         try { // Re-creating Configuration object from its Base64 serialized form
-                            byte[] b = Base64.getDecoder().decode(serializedConf.getBytes());
-                            ByteArrayInputStream bi = new ByteArrayInputStream(b);
-                            ObjectInputStream si = new ObjectInputStream(bi);
-
                             Configuration conf = (Configuration) IOUtil.deserializeFromBase64(serializedConf);
 
                             if (gui != null) {
-                                gui.getCurrentMoodBox().setSelectedItem(conf.getMood());
-                                gui.getInfoLabel().setText("Info: Successfully restored preferences.");
+                                applyConfiguration(conf);
                             }
                         } catch (IOException | ClassNotFoundException e) {
                             e.printStackTrace();
@@ -86,6 +78,17 @@ public class PlayerAgent extends Agent {
         msg.addReceiver(new AID("magpie_preferences", AID.ISLOCALNAME));
         msg.setContent("configuration");
         send(msg);
+    }
+
+    private void applyConfiguration(Configuration conf) {
+        gui.getCurrentMoodBox().setSelectedItem(conf.getMood());
+        for (ProcessAttributes e : conf.getProcessesAttributes()) {
+            gui.addProcessLabel(e.getName());
+        }
+        for (TimeInterval e : conf.getTimeIntervals()) {
+            gui.addTimeLabel(e.toString());
+        }
+        gui.getInfoLabel().setText("Info: Successfully restored preferences.");
     }
 
     private void setupUi() {
@@ -154,6 +157,5 @@ public class PlayerAgent extends Agent {
         msg.setContent("expand:2"); // TODO replace 2 with user-defined batch size
         msg.addReceiver(new AID("magpie_playlist", AID.ISLOCALNAME));
         send(msg);
-        System.out.println("Player: Sent playlist expansion request.");
     }
 }

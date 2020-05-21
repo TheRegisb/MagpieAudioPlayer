@@ -86,23 +86,26 @@ public class LocalSqliteAdapter implements MediaRetriever {
                         .append(i + 1 != mf.getFeel().size() ? " AND " : ") ");
             }
         }
+        if (sb.toString().endsWith(") ")) {
+            sb.append("AND ");
+        }
         switch (mf.getBPM()) {
             case ENERGETIC:
-                sb.append("AND high_bpm = 1 AND low_bpm = 0 ");
-                sb.append("AND high_bpm = 1 AND low_bpm = 0 ");
+                sb.append("high_bpm = 1 AND low_bpm = 0 ");
                 break;
             case NOT_CALM:
-                sb.append("AND low_bpm = 0 ");
+                sb.append("low_bpm = 0 ");
                 break;
             case NEUTRAL:
                 break;
             case NOT_ENERGETIC:
-                sb.append("AND high_bpm = 0 ");
+                sb.append("high_bpm = 0 ");
+                break;
             case CALM:
-                sb.append("AND high_bpm = 0 AND low_bpm = 1 ");
+                sb.append("high_bpm = 0 AND low_bpm = 1 ");
+                break;
         }
         sb.append("ORDER BY RANDOM() LIMIT ").append(count); // TODO change random selection by 'Not in existing playlist'
-        System.out.println(sb.toString());
         return sb.toString();
     }
 

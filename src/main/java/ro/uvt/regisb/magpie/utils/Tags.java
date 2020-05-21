@@ -18,19 +18,19 @@ public class Tags implements Serializable {
     }
 
     public Tags(Tags tags) {
-        feel = tags.feel;
-        genre = tags.genre;
+        feel = new ArrayList<>(tags.feel);
+        genre = new ArrayList<>(tags.genre);
         bpmTweak = tags.bpmTweak;
     }
 
     public Tags invert() {
         Tags inverse = new Tags(this);
 
-        for (Pair<String, Integer> a : this.genre) {
-            inverse.addGenre(a.getKey(), a.getValue() * -1);
+        for (Pair<String, Integer> a : inverse.genre) {
+            a.setValue(a.getValue() * -1);
         }
-        for (Pair<String, Integer> a : this.feel) {
-            inverse.addFeel(a.getKey(), a.getValue() * -1);
+        for (Pair<String, Integer> a : inverse.feel) {
+            a.setValue(a.getValue() * -1);
         }
         inverse.bpmTweak *= -1;
         return inverse;

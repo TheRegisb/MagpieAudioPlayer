@@ -5,6 +5,7 @@ import jade.core.Agent;
 import jade.core.behaviours.CyclicBehaviour;
 import jade.core.behaviours.TickerBehaviour;
 import jade.lang.acl.ACLMessage;
+import ro.uvt.regisb.magpie.utils.Configuration;
 import ro.uvt.regisb.magpie.utils.IOUtil;
 import ro.uvt.regisb.magpie.utils.ProcessAttributes;
 
@@ -46,7 +47,6 @@ public class ProcessesAgent extends Agent {
                 ACLMessage msg = receive();
 
                 if (msg != null) {
-                    System.out.println("PrA: " + msg.getContent());
                     if (msg.getPerformative() == ACLMessage.INFORM
                             && msg.getContent().startsWith("process:add")) {
                         try {
@@ -81,11 +81,34 @@ public class ProcessesAgent extends Agent {
                             send(res);
                         }
                     }
+                    // Receiving configuration proposal
+                    else if (msg.getPerformative() == ACLMessage.INFORM && msg.getContent().startsWith("conf:")) {
+                        try {
+                            applyConfiguration((Configuration) IOUtil.deserializeFromBase64(msg.getContent().split(":")[1]));
+                        } catch (IOException | ClassNotFoundException e) {
+                            ACLMessage res = new ACLMessage(ACLMessage.NOT_UNDERSTOOD);
+
+                            res.addReceiver(msg.getSender());
+                            res.setContent("configuration:unknown");
+                            send(res);
+                            e.printStackTrace();
+                        }
+                    }
                 } else {
                     block();
                 }
             }
         });
+
+        ACLMessage confRequest = new ACLMessage(ACLMessage.REQUEST);
+
+        confRequest.addReceiver(new AID("magpie_preferences", AID.ISLOCALNAME));
+        confRequest.setContent("configuration");
+        send(confRequest);
+    }
+
+    private void applyConfiguration(Configuration conf) {
+        watchlist.addAll(conf.getProcessesAttributes());
     }
 
     private boolean processInWatchlist(String processName) {
@@ -105,7 +128,7 @@ public class ProcessesAgent extends Agent {
             ACLMessage msg = new ACLMessage(ACLMessage.PROPOSE);
 
             msg.addReceiver(new AID("magpie_playlist", AID.ISLOCALNAME));
-            msg.setContent("process:" + IOUtil.serializeToBase64(processAttributes));
+            msg.setContent("process:" + IOUtil.serializeToBase64((deleted ? processAttributes.invert() : processAttributes)));
             send(msg);
         } catch (IOException e) {
             e.printStackTrace();

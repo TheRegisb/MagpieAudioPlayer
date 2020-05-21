@@ -170,6 +170,14 @@ public class PlayerGui extends JFrame {
         return infoLabel;
     }
 
+    public void addProcessLabel(String label) {
+        ((DefaultListModel) processesList.getModel()).addElement(label);
+    }
+
+    public void addTimeLabel(String label) {
+        ((DefaultListModel) timeSlotList.getModel()).addElement(label);
+    }
+
     public void addMediaPaths(java.util.List<String> medias) {
         DefaultListModel listContent = ((DefaultListModel) playList.getModel());
 
