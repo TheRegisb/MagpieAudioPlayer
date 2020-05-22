@@ -1,15 +1,16 @@
 package ro.uvt.regisb.magpie.agent;
 
+import jade.core.AID;
 import jade.core.Agent;
 import jade.core.behaviours.CyclicBehaviour;
 import jade.lang.acl.ACLMessage;
-import org.apache.commons.lang3.NotImplementedException;
 import ro.uvt.regisb.magpie.content.LocalSqliteAdapter;
 import ro.uvt.regisb.magpie.content.MediaRetriever;
 import ro.uvt.regisb.magpie.utils.C;
 import ro.uvt.regisb.magpie.utils.IOUtil;
 import ro.uvt.regisb.magpie.utils.WeightedMediaFilter;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.List;
 
@@ -21,17 +22,19 @@ public class ContentManagerAgent extends Agent {
         String[] args = (String[]) getArguments(); // Expect arguments of style ["local", address_or_path]
 
         if (args.length != 2 || args[0] == null || args[1] == null) {
+            informPlayerOfFailure("Invalid adapter format and/or target");
             doDelete();
         }
 
         if (args[0].equals("local")) {
             mr = new LocalSqliteAdapter();
-            if (!mr.connect("jdbc:sqlite:" + args[1])) {
-                System.err.println("Unable to connect to the database");
+            if (!new File(args[1]).exists() || !mr.connect("jdbc:sqlite:" + args[1])) {
+                informPlayerOfFailure("Unable to connect to the " + args[1] + " database");
                 doDelete();
             }
         } else {
-            throw new NotImplementedException("Unknown adapter format");
+            informPlayerOfFailure("Unknown '" + args[0] + "' adapter format");
+            doDelete();
         }
 
         // ACL messages handler
@@ -84,5 +87,13 @@ public class ContentManagerAgent extends Agent {
         if (mr != null) {
             mr.disconnect();
         }
+    }
+
+    private void informPlayerOfFailure(String what) {
+        ACLMessage msg = new ACLMessage(ACLMessage.FAILURE);
+
+        msg.addReceiver(new AID(C.PLAYER_AID, AID.ISLOCALNAME));
+        msg.setContent(C.MANAGEMENT_FAILURE_ACL + what);
+        send(msg);
     }
 }

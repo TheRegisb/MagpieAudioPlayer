@@ -23,6 +23,7 @@ public class C {
     public static final String MOOD_ACL = "mood" + SEPARATOR;
     public static final String CONTENT_ACL = "content" + SEPARATOR;
     public static final String CONFIGURATION_RESTORE_ACL = "conf" + SEPARATOR;
+    public static final String MANAGEMENT_FAILURE_ACL = "mngr" + SEPARATOR + "fail" + SEPARATOR;
 
     public static final String DEFAULT_BATCH_SIZE = "2";
 }

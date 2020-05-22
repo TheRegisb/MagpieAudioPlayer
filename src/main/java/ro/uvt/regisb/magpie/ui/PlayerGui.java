@@ -4,7 +4,7 @@ import javafx.scene.media.Media;
 import javafx.scene.media.MediaPlayer;
 import javafx.util.Duration;
 import org.apache.commons.lang3.time.DateFormatUtils;
-import ro.uvt.regisb.magpie.PlayerAgent;
+import ro.uvt.regisb.magpie.agent.PlayerAgent;
 import ro.uvt.regisb.magpie.utils.ProcessAttributes;
 import ro.uvt.regisb.magpie.utils.TimeInterval;
 
@@ -38,7 +38,7 @@ public class PlayerGui extends JFrame {
     private JList processesList;
     private JButton processesNewButton;
     private JLabel processesLabel;
-    private JLabel infoLabel; // todo hide after set amount of time
+    private JLabel infoLabel;
     private JButton timeSlotDeleteButton;
     private JButton processesDeleteButton;
     private JSlider volumeSlider;
@@ -50,6 +50,8 @@ public class PlayerGui extends JFrame {
 
     private boolean sliderDragged = false;
     private boolean stillPlaying = false;
+    private boolean remoteError = false;
+    private String errorDesc;
 
     protected PlayerAgent owner;
     protected MediaPlayer mediaPlayer = null;
@@ -87,6 +89,9 @@ public class PlayerGui extends JFrame {
                     playList.setSelectedIndex(playList.locationToIndex(e.getPoint()));
                     if (mediaPlayer != null && mediaPlayer.getStatus() == MediaPlayer.Status.PLAYING) {
                         mediaPlayer.stop();
+                    }
+                    if (playList.getSelectedIndex() == playList.getModel().getSize() - 1) {
+                        owner.requestPlaylistExpansion((int) batchSizeSpinner.getValue());
                     }
                     Media hit = new Media(new File(playList.getSelectedValue().toString()).toURI().toString());
 
@@ -164,8 +169,12 @@ public class PlayerGui extends JFrame {
         playButton.addActionListener(e -> {
             if (mediaPlayer == null) {
                 if (playList.getSelectedIndex() + 1 >= playList.getModel().getSize() - 1) { // One or zero medias left
-                    infoLabel.setText("Info: Downloading more titles.");
-                    owner.requestPlaylistExpansion((int) batchSizeSpinner.getValue());
+                    if (!remoteError) {
+                        infoLabel.setText("Info: Downloading more titles.");
+                        owner.requestPlaylistExpansion((int) batchSizeSpinner.getValue());
+                    } else {
+                        infoLabel.setText(errorDesc);
+                    }
                     return;
                 }
                 Media hit = new Media(new File(playList.getSelectedValue().toString()).toURI().toString());
@@ -180,10 +189,16 @@ public class PlayerGui extends JFrame {
             stillPlaying = true;
         });
         stopButton.addActionListener(e -> {
-            mediaPlayer.stop();
-            infoLabel.setText("Info: Playback stopped.");
+            if (mediaPlayer != null && mediaPlayer.getStatus() != MediaPlayer.Status.STOPPED) {
+                mediaPlayer.stop();
+                infoLabel.setText("Info: Playback stopped.");
+            }
         });
-        pauseButton.addActionListener(e -> mediaPlayer.pause());
+        pauseButton.addActionListener(e -> {
+            if (mediaPlayer != null && mediaPlayer.getStatus() != MediaPlayer.Status.PLAYING) {
+                mediaPlayer.pause();
+            }
+        });
         processesNewButton.addActionListener(e -> {
             ProcessWatchlistDialog form = new ProcessWatchlistDialog();
 
@@ -320,14 +335,24 @@ public class PlayerGui extends JFrame {
         infoLabel.setText("Info: Added " + medias.size() + " more track" + (medias.size() > 1 ? "s." : "."));
     }
 
+    public void setErrorState(boolean state, String what) {
+        remoteError = true;
+        errorDesc = what;
+        infoLabel.setText(what);
+    }
+
     private MediaPlayer autoPlayerFrom(Media hit) {
         mediaPlayer = new MediaPlayer(hit);
 
         mediaPlayer.setOnEndOfMedia(() -> {
             if (playList.getSelectedIndex() + 1 == playList.getModel().getSize()) {
                 mediaPlayer.stop();
-                infoLabel.setText("Info: Downloading more titles.");
-                owner.requestPlaylistExpansion((int) batchSizeSpinner.getValue());
+                if (!remoteError) {
+                    infoLabel.setText("Info: Downloading more titles.");
+                    owner.requestPlaylistExpansion((int) batchSizeSpinner.getValue());
+                } else {
+                    infoLabel.setText(errorDesc);
+                }
                 stillPlaying = false;
             } else { // Play next music in list
                 playList.setSelectedIndex(playList.getSelectedIndex() + 1);

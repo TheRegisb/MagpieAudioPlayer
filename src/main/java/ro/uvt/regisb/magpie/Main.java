@@ -9,10 +9,15 @@ import ro.uvt.regisb.magpie.utils.C;
 
 public class Main {
     public static void main(String[] argv) throws StaleProxyException {
+        if (argv == null || (argv.length > 1 && argv[0].contains("-help"))) {
+            System.out.println("Usage: magpie (source) (adapter)" + System.lineSeparator()
+                    + "Default: audiosample.sqlite.db local");
+            return;
+        }
         String[] playerArgs = new String[2];
 
-        playerArgs[0] = (argv.length < 1 ? "audiosample.sqlite.db" : argv[0]);
-        playerArgs[1] = (argv.length < 2 ? "local" : argv[1]);
+        playerArgs[0] = (argv.length >= 1 ? argv[0] : "audiosample.sqlite.db");
+        playerArgs[1] = (argv.length >= 2 ? argv[1] : "local");
 
         System.out.println(String.format("Info: Trying to start Magpie Audio Player using %s (%s)",
                 playerArgs[0],

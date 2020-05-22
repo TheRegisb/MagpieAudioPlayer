@@ -46,6 +46,12 @@ public class PlayerAgent extends Agent {
                             && msg.getContent().startsWith(C.CONTENT_ACL)) {
                         gui.addMediaPaths(new ArrayList<>(Arrays.asList(msg.getContent().split(C.SEPARATOR)[1].split(", "))));
                     }
+                    // Reacting to a ContentManagerAgent failure
+                    else if (msg.getPerformative() == ACLMessage.FAILURE
+                            && msg.getContent().startsWith(C.MANAGEMENT_FAILURE_ACL)) {
+                        gui.setErrorState(true,
+                                "Error: Cannot connect to media source: " + msg.getContent().split(C.SEPARATOR)[2]);
+                    }
                 } else {
                     block();
                 }
