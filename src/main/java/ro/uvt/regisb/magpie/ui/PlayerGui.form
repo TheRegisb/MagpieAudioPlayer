@@ -87,7 +87,7 @@
               </component>
               <component id="12736" class="javax.swing.JSlider" binding="musicProgressSlider">
                 <constraints>
-                  <grid row="1" column="1" row-span="1" col-span="9" vsize-policy="0" hsize-policy="6" anchor="8" fill="1" indent="0" use-parent-layout="false"/>
+                  <grid row="1" column="2" row-span="1" col-span="8" vsize-policy="0" hsize-policy="6" anchor="8" fill="1" indent="0" use-parent-layout="false"/>
                 </constraints>
                 <properties>
                   <maximum value="100"/>
@@ -102,6 +102,14 @@
                 <border type="none"/>
                 <children/>
               </scrollpane>
+              <component id="522d1" class="javax.swing.JLabel" binding="playtimeLabel">
+                <constraints>
+                  <grid row="1" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+                </constraints>
+                <properties>
+                  <text value="00:00 / 00:00"/>
+                </properties>
+              </component>
             </children>
           </grid>
           <grid id="77b77" layout-manager="GridLayoutManager" row-count="9" column-count="5" same-size-horizontally="false" same-size-vertically="false" hgap="-1" vgap="-1">

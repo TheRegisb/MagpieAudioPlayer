@@ -3,6 +3,7 @@ package ro.uvt.regisb.magpie.ui;
 import javafx.scene.media.Media;
 import javafx.scene.media.MediaPlayer;
 import javafx.util.Duration;
+import org.apache.commons.lang3.time.DateFormatUtils;
 import ro.uvt.regisb.magpie.PlayerAgent;
 import ro.uvt.regisb.magpie.utils.ProcessAttributes;
 import ro.uvt.regisb.magpie.utils.TimeInterval;
@@ -44,9 +45,11 @@ public class PlayerGui extends JFrame {
     private JSlider musicProgressSlider;
     private JScrollPane playlistScrollPane;
     private JSpinner batchSizeSpinner;
+    private JLabel playtimeLabel;
     private String onStopPressed;
 
     private boolean sliderDragged = false;
+    private boolean stillPlaying = false;
 
     protected PlayerAgent owner;
     protected MediaPlayer mediaPlayer = null;
@@ -90,17 +93,18 @@ public class PlayerGui extends JFrame {
                     mediaPlayer = autoPlayerFrom(hit);
                     mediaPlayer.setVolume((double) volumeSlider.getValue() / volumeSlider.getMaximum());
                     mediaPlayer.play();
+                    stillPlaying = true;
                 }
             }
         });
         playList.getModel().addListDataListener(new ListDataListener() {
             @Override
             public void intervalAdded(ListDataEvent e) {
-                if (playList.getSelectedValue() == null) {
-                    playList.setSelectedIndex(0);
-                }
+                System.out.println("!" + playList.getSelectedIndex());
                 if (mediaPlayer == null || mediaPlayer.getStatus() == MediaPlayer.Status.STOPPED) {
-                    playList.setSelectedIndex(playList.getSelectedIndex() + 1);
+                    if (!stillPlaying) {
+                        playList.setSelectedIndex(playList.getSelectedIndex() + 1);
+                    }
                     Media hit = new Media(new File(playList.getSelectedValue().toString()).toURI().toString());
 
                     mediaPlayer = autoPlayerFrom(hit);
@@ -121,6 +125,9 @@ public class PlayerGui extends JFrame {
             if (playList.getSelectedIndex() + 1 >= playList.getModel().getSize() - 1) { // One or zero medias left
                 owner.requestPlaylistExpansion();
             }
+            if (playList.getSelectedIndex() == playList.getModel().getSize() - 1) {
+                stillPlaying = false;
+            }
             if (mediaPlayer != null && playList.getSelectedIndex() != playList.getModel().getSize() - 1) {
                 playList.setSelectedIndex(playList.getSelectedValue() == null ? 0 : playList.getSelectedIndex() + 1);
                 mediaPlayer.stop();
@@ -129,6 +136,7 @@ public class PlayerGui extends JFrame {
                 mediaPlayer = autoPlayerFrom(hit);
                 mediaPlayer.setVolume((double) volumeSlider.getValue() / volumeSlider.getMaximum());
                 mediaPlayer.play();
+                stillPlaying = true;
             }
         });
         previousButton.addActionListener(e -> {
@@ -143,6 +151,7 @@ public class PlayerGui extends JFrame {
                 mediaPlayer = autoPlayerFrom(hit);
                 mediaPlayer.setVolume((double) volumeSlider.getValue() / volumeSlider.getMaximum());
                 mediaPlayer.play();
+                stillPlaying = true;
             }
         });
         currentMoodBox.addActionListener(e -> {
@@ -160,8 +169,11 @@ public class PlayerGui extends JFrame {
 
                 mediaPlayer = autoPlayerFrom(hit);
                 mediaPlayer.setVolume((double) volumeSlider.getValue() / volumeSlider.getMaximum());
+            } else if (mediaPlayer.getStatus() == MediaPlayer.Status.PLAYING) {
+                mediaPlayer.stop();
             }
             mediaPlayer.play();
+            stillPlaying = true;
         });
         stopButton.addActionListener(e -> mediaPlayer.stop());
         pauseButton.addActionListener(e -> mediaPlayer.pause());
@@ -241,7 +253,11 @@ public class PlayerGui extends JFrame {
                 if (mediaPlayer != null) {
                     BasicSliderUI ui = (BasicSliderUI) musicProgressSlider.getUI();
                     musicProgressSlider.setValue(ui.valueForXPosition(e.getX()));
-                    mediaPlayer.seek(Duration.seconds(ui.valueForXPosition(e.getX())));
+                    mediaPlayer.seek(
+                            mediaPlayer.getTotalDuration()
+                                    .divide(100.0)
+                                    .multiply(ui.valueForXPosition(e.getX()))
+                    );
                 }
                 sliderDragged = false;
             }
@@ -298,15 +314,23 @@ public class PlayerGui extends JFrame {
                 mediaPlayer.stop();
                 infoLabel.setText("Info: Downloading more titles.");
                 owner.requestPlaylistExpansion();
+                stillPlaying = false;
             } else { // Play next music in list
                 playList.setSelectedIndex(playList.getSelectedIndex() + 1);
                 Media hit1 = new Media(new File(playList.getSelectedValue().toString()).toURI().toString());
 
                 mediaPlayer = new MediaPlayer(hit1);
                 mediaPlayer.play();
+                stillPlaying = true;
             }
         });
         mediaPlayer.currentTimeProperty().addListener(e -> {
+            boolean greaterThanAHour = mediaPlayer.getTotalDuration().greaterThanOrEqualTo(Duration.hours(1));
+
+            playtimeLabel.setText(String.format("%s / %s",
+                    DateFormatUtils.format((int) mediaPlayer.getCurrentTime().toMillis(), greaterThanAHour ? "HH:mm:ss" : "mm:ss"),
+                    DateFormatUtils.format((int) mediaPlayer.getTotalDuration().toMillis(), greaterThanAHour ? "HH:mm:ss" : "mm:ss")
+            ));
             musicProgressSlider.setValue((int) (100 * mediaPlayer.getCurrentTime().toSeconds() / mediaPlayer.getTotalDuration().toSeconds()));
         });
         return mediaPlayer;
