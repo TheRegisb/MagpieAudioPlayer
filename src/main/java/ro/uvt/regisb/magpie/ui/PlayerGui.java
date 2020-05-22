@@ -94,9 +94,6 @@ public class PlayerGui extends JFrame {
                     mediaPlayer.setVolume((double) volumeSlider.getValue() / volumeSlider.getMaximum());
                     infoLabel.setText("Starting playback.");
                     mediaPlayer.play();
-                    infoLabel.setText(String.format("%s by %s",
-                            hit.getMetadata().getOrDefault("title", "song"),
-                            hit.getMetadata().getOrDefault("artist", "unknown artist")));
                     stillPlaying = true;
                 }
             }
@@ -114,9 +111,6 @@ public class PlayerGui extends JFrame {
                     mediaPlayer.setVolume((double) volumeSlider.getValue() / volumeSlider.getMaximum());
                     infoLabel.setText("Info: Starting playback.");
                     mediaPlayer.play();
-                    infoLabel.setText(String.format("%s by %s",
-                            hit.getMetadata().getOrDefault("title", "song"),
-                            hit.getMetadata().getOrDefault("artist", "unknown artist")));
                 }
             }
 
@@ -144,9 +138,6 @@ public class PlayerGui extends JFrame {
                 mediaPlayer.setVolume((double) volumeSlider.getValue() / volumeSlider.getMaximum());
                 infoLabel.setText("Info: Starting playback.");
                 mediaPlayer.play();
-                infoLabel.setText(String.format("%s by %s",
-                        mediaPlayer.getMedia().getMetadata().getOrDefault("title", "song"),
-                        mediaPlayer.getMedia().getMetadata().getOrDefault("artist", "unknown artist")));
                 stillPlaying = true;
             }
         });
@@ -163,9 +154,6 @@ public class PlayerGui extends JFrame {
                 mediaPlayer.setVolume((double) volumeSlider.getValue() / volumeSlider.getMaximum());
                 infoLabel.setText("Info: Starting playback.");
                 mediaPlayer.play();
-                infoLabel.setText(String.format("%s by %s",
-                        mediaPlayer.getMedia().getMetadata().getOrDefault("title", "song"),
-                        mediaPlayer.getMedia().getMetadata().getOrDefault("artist", "unknown artist")));
                 stillPlaying = true;
             }
         });
@@ -189,9 +177,6 @@ public class PlayerGui extends JFrame {
             }
             infoLabel.setText("Info: Starting playback.");
             mediaPlayer.play();
-            infoLabel.setText(String.format("%s by %s",
-                    mediaPlayer.getMedia().getMetadata().getOrDefault("title", "song"),
-                    mediaPlayer.getMedia().getMetadata().getOrDefault("artist", "unknown artist")));
             stillPlaying = true;
         });
         stopButton.addActionListener(e -> {
@@ -351,9 +336,7 @@ public class PlayerGui extends JFrame {
                 mediaPlayer = new MediaPlayer(hit1);
                 infoLabel.setText("Info: Starting playback.");
                 mediaPlayer.play();
-                infoLabel.setText(String.format("%s by %s",
-                        hit.getMetadata().getOrDefault("title", "song"),
-                        hit.getMetadata().getOrDefault("artist", "unknown artist")));
+
                 stillPlaying = true;
             }
         });
@@ -365,6 +348,11 @@ public class PlayerGui extends JFrame {
                     DateFormatUtils.format((int) mediaPlayer.getTotalDuration().toMillis(), greaterThanAHour ? "HH:mm:ss" : "mm:ss")
             ));
             musicProgressSlider.setValue((int) (100 * mediaPlayer.getCurrentTime().toSeconds() / mediaPlayer.getTotalDuration().toSeconds()));
+        });
+        mediaPlayer.setOnPlaying(() -> {
+            infoLabel.setText(String.format("%s by %s",
+                    hit.getMetadata().getOrDefault("title", "song"),
+                    hit.getMetadata().getOrDefault("artist", "unknown artist")));
         });
         return mediaPlayer;
     }
