@@ -88,6 +88,7 @@ public class PlayerAgent extends Agent {
         for (TimeInterval e : conf.getTimeIntervals()) {
             gui.addTimeLabel(e.toString());
         }
+        gui.getBatchSizeSpinner().setValue(conf.getBatchSize());
         gui.getInfoLabel().setText("Info: Successfully restored preferences.");
     }
 
@@ -151,10 +152,18 @@ public class PlayerAgent extends Agent {
         send(msg);
     }
 
-    public void requestPlaylistExpansion() {
+    public void broadcastBatchSizeChange(int batchSize) {
+        ACLMessage msg = new ACLMessage(ACLMessage.INFORM);
+
+        msg.setContent("batch:" + batchSize);
+        msg.addReceiver(new AID("magpie_preferences", AID.ISLOCALNAME));
+        send(msg);
+    }
+
+    public void requestPlaylistExpansion(int batchSize) {
         ACLMessage msg = new ACLMessage(ACLMessage.REQUEST);
 
-        msg.setContent("expand:2"); // TODO replace 2 with user-defined batch size
+        msg.setContent("expand:" + batchSize);
         msg.addReceiver(new AID("magpie_playlist", AID.ISLOCALNAME));
         send(msg);
     }

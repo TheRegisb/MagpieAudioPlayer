@@ -92,7 +92,11 @@ public class PlayerGui extends JFrame {
 
                     mediaPlayer = autoPlayerFrom(hit);
                     mediaPlayer.setVolume((double) volumeSlider.getValue() / volumeSlider.getMaximum());
+                    infoLabel.setText("Starting playback.");
                     mediaPlayer.play();
+                    infoLabel.setText(String.format("%s by %s",
+                            hit.getMetadata().getOrDefault("title", "song"),
+                            hit.getMetadata().getOrDefault("artist", "unknown artist")));
                     stillPlaying = true;
                 }
             }
@@ -100,7 +104,6 @@ public class PlayerGui extends JFrame {
         playList.getModel().addListDataListener(new ListDataListener() {
             @Override
             public void intervalAdded(ListDataEvent e) {
-                System.out.println("!" + playList.getSelectedIndex());
                 if (mediaPlayer == null || mediaPlayer.getStatus() == MediaPlayer.Status.STOPPED) {
                     if (!stillPlaying) {
                         playList.setSelectedIndex(playList.getSelectedIndex() + 1);
@@ -109,7 +112,11 @@ public class PlayerGui extends JFrame {
 
                     mediaPlayer = autoPlayerFrom(hit);
                     mediaPlayer.setVolume((double) volumeSlider.getValue() / volumeSlider.getMaximum());
+                    infoLabel.setText("Info: Starting playback.");
                     mediaPlayer.play();
+                    infoLabel.setText(String.format("%s by %s",
+                            hit.getMetadata().getOrDefault("title", "song"),
+                            hit.getMetadata().getOrDefault("artist", "unknown artist")));
                 }
             }
 
@@ -123,7 +130,7 @@ public class PlayerGui extends JFrame {
         });
         nextButton.addActionListener(e -> {
             if (playList.getSelectedIndex() + 1 >= playList.getModel().getSize() - 1) { // One or zero medias left
-                owner.requestPlaylistExpansion();
+                owner.requestPlaylistExpansion((int) batchSizeSpinner.getValue());
             }
             if (playList.getSelectedIndex() == playList.getModel().getSize() - 1) {
                 stillPlaying = false;
@@ -135,7 +142,11 @@ public class PlayerGui extends JFrame {
 
                 mediaPlayer = autoPlayerFrom(hit);
                 mediaPlayer.setVolume((double) volumeSlider.getValue() / volumeSlider.getMaximum());
+                infoLabel.setText("Info: Starting playback.");
                 mediaPlayer.play();
+                infoLabel.setText(String.format("%s by %s",
+                        mediaPlayer.getMedia().getMetadata().getOrDefault("title", "song"),
+                        mediaPlayer.getMedia().getMetadata().getOrDefault("artist", "unknown artist")));
                 stillPlaying = true;
             }
         });
@@ -150,7 +161,11 @@ public class PlayerGui extends JFrame {
 
                 mediaPlayer = autoPlayerFrom(hit);
                 mediaPlayer.setVolume((double) volumeSlider.getValue() / volumeSlider.getMaximum());
+                infoLabel.setText("Info: Starting playback.");
                 mediaPlayer.play();
+                infoLabel.setText(String.format("%s by %s",
+                        mediaPlayer.getMedia().getMetadata().getOrDefault("title", "song"),
+                        mediaPlayer.getMedia().getMetadata().getOrDefault("artist", "unknown artist")));
                 stillPlaying = true;
             }
         });
@@ -162,7 +177,7 @@ public class PlayerGui extends JFrame {
             if (mediaPlayer == null) {
                 if (playList.getSelectedIndex() + 1 >= playList.getModel().getSize() - 1) { // One or zero medias left
                     infoLabel.setText("Info: Downloading more titles.");
-                    owner.requestPlaylistExpansion();
+                    owner.requestPlaylistExpansion((int) batchSizeSpinner.getValue());
                     return;
                 }
                 Media hit = new Media(new File(playList.getSelectedValue().toString()).toURI().toString());
@@ -172,10 +187,17 @@ public class PlayerGui extends JFrame {
             } else if (mediaPlayer.getStatus() == MediaPlayer.Status.PLAYING) {
                 mediaPlayer.stop();
             }
+            infoLabel.setText("Info: Starting playback.");
             mediaPlayer.play();
+            infoLabel.setText(String.format("%s by %s",
+                    mediaPlayer.getMedia().getMetadata().getOrDefault("title", "song"),
+                    mediaPlayer.getMedia().getMetadata().getOrDefault("artist", "unknown artist")));
             stillPlaying = true;
         });
-        stopButton.addActionListener(e -> mediaPlayer.stop());
+        stopButton.addActionListener(e -> {
+            mediaPlayer.stop();
+            infoLabel.setText("Info: Playback stopped.");
+        });
         pauseButton.addActionListener(e -> mediaPlayer.pause());
         processesNewButton.addActionListener(e -> {
             ProcessWatchlistDialog form = new ProcessWatchlistDialog();
@@ -279,10 +301,17 @@ public class PlayerGui extends JFrame {
         pack();
 
 
+        batchSizeSpinner.addChangeListener(e -> {
+            owner.broadcastBatchSizeChange((int) batchSizeSpinner.getValue());
+        });
     }
 
     public JComboBox getCurrentMoodBox() {
         return currentMoodBox;
+    }
+
+    public JSpinner getBatchSizeSpinner() {
+        return batchSizeSpinner;
     }
 
     public JLabel getInfoLabel() {
@@ -313,14 +342,18 @@ public class PlayerGui extends JFrame {
             if (playList.getSelectedIndex() + 1 == playList.getModel().getSize()) {
                 mediaPlayer.stop();
                 infoLabel.setText("Info: Downloading more titles.");
-                owner.requestPlaylistExpansion();
+                owner.requestPlaylistExpansion((int) batchSizeSpinner.getValue());
                 stillPlaying = false;
             } else { // Play next music in list
                 playList.setSelectedIndex(playList.getSelectedIndex() + 1);
                 Media hit1 = new Media(new File(playList.getSelectedValue().toString()).toURI().toString());
 
                 mediaPlayer = new MediaPlayer(hit1);
+                infoLabel.setText("Info: Starting playback.");
                 mediaPlayer.play();
+                infoLabel.setText(String.format("%s by %s",
+                        hit.getMetadata().getOrDefault("title", "song"),
+                        hit.getMetadata().getOrDefault("artist", "unknown artist")));
                 stillPlaying = true;
             }
         });

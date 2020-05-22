@@ -9,15 +9,17 @@ public class Configuration implements Serializable {
     private String mood;
     private List<ProcessAttributes> procAttrs = new ArrayList<>();
     private List<TimeInterval> timeIntervals = new ArrayList<>();
+    private int batchSize = 2;
 
     public Configuration() {
 
     }
 
-    public Configuration(String mood, List<ProcessAttributes> procAttrs, List<TimeInterval> timeIntervals) {
+    public Configuration(String mood, List<ProcessAttributes> procAttrs, List<TimeInterval> timeIntervals, int batchSize) {
         this.mood = mood;
         this.procAttrs = procAttrs;
         this.timeIntervals = timeIntervals;
+        this.batchSize = batchSize;
     }
 
     public void addProcessAttributes(ProcessAttributes attrs) {
@@ -50,5 +52,9 @@ public class Configuration implements Serializable {
 
     public List<TimeInterval> getTimeIntervals() {
         return timeIntervals;
+    }
+
+    public int getBatchSize() {
+        return batchSize;
     }
 }

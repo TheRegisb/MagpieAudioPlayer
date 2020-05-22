@@ -18,7 +18,8 @@ public class PreferencesAgent extends Agent {
     private Configuration conf = new Configuration(
             magpiePrefs.get("mood", "Neutral"),
             importProcessesAttributes(),
-            importTimeIntervals()
+            importTimeIntervals(),
+            importBatchSize()
     );
 
     @Override
@@ -79,6 +80,15 @@ public class PreferencesAgent extends Agent {
                             exportTimeIntervals();
                         }
                     }
+                    // Editing download batch size
+                    else if (msg.getPerformative() == ACLMessage.INFORM
+                            && msg.getContent().matches("^batch:\\d+$")) {
+                        try {
+                            exportBatchSize(Integer.parseInt(msg.getContent().split(":")[1]));
+                        } catch (NumberFormatException ignored) {
+                        }
+                        ;
+                    }
                 } else {
                     block();
                 }
@@ -106,6 +116,10 @@ public class PreferencesAgent extends Agent {
         }
     }
 
+    private void exportBatchSize(int batchSize) {
+        magpiePrefs.put("dlbufsize", Integer.toString(batchSize));
+    }
+
     private List<TimeInterval> importTimeIntervals() {
         String nodeContent = magpiePrefs.get("timeslots", "");
 
@@ -130,6 +144,16 @@ public class PreferencesAgent extends Agent {
             }
         }
         return new ArrayList<>();
+    }
+
+    private int importBatchSize() {
+        String nodeContent = magpiePrefs.get("dlbufsize", "2");
+
+        try {
+            return Integer.parseInt(nodeContent);
+        } catch (NumberFormatException e) {
+            return 0;
+        }
     }
 
     // TODO add procs watchlist and time slot
