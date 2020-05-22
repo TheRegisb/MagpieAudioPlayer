@@ -3,14 +3,14 @@ package ro.uvt.regisb.magpie;
 import jade.core.Agent;
 import jade.core.behaviours.CyclicBehaviour;
 import jade.lang.acl.ACLMessage;
+import org.apache.commons.lang3.NotImplementedException;
 import ro.uvt.regisb.magpie.content.LocalSqliteAdapter;
 import ro.uvt.regisb.magpie.content.MediaRetriever;
+import ro.uvt.regisb.magpie.utils.C;
+import ro.uvt.regisb.magpie.utils.IOUtil;
 import ro.uvt.regisb.magpie.utils.WeightedMediaFilter;
 
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.util.Base64;
 import java.util.List;
 
 public class ContentManagerAgent extends Agent {
@@ -18,41 +18,48 @@ public class ContentManagerAgent extends Agent {
 
     @Override
     protected void setup() {
-        System.out.println("Content Manager online.");
-        // TODO setup correct adapter on given arguments
-        // getArguments(); // [local/http];<addr>
-        mr = new LocalSqliteAdapter();
+        String[] args = (String[]) getArguments();
 
-
-        if (!mr.connect("jdbc:sqlite:audiosample.sqlite.db")) {
-            System.err.println("Unable to connect to the database");
+        if (args.length != 2 || args[0] == null || args[1] == null) {
+            doDelete();
         }
 
+        if (args[0].equals("local")) {
+            mr = new LocalSqliteAdapter();
+            if (!mr.connect("jdbc:sqlite:" + args[1])) {
+                System.err.println("Unable to connect to the database");
+                doDelete();
+            }
+        } else {
+            throw new NotImplementedException("Unknown adapter format");
+        }
+
+        // ACL messages handler
         addBehaviour(new CyclicBehaviour(this) {
             @Override
             public void action() {
                 ACLMessage msg = receive();
 
                 if (msg != null) {
+                    // Reacting to a "Get content" request
                     if (msg.getPerformative() == ACLMessage.REQUEST
-                            && msg.getContent().matches("^content:\\d+:.*$")) { // Regex of form 'content:[NUMBER]:[Serialized Object]'
+                            && msg.getContent().matches("^" + C.CONTENT_ACL + "\\d+:.*$")) { // Regex of form 'content:[NUMBER]:[Serialized Object]'
                         try {
-                            String[] parts = msg.getContent().split(":");
-                            int count = Integer.parseInt(parts[1]);
-                            byte[] b = Base64.getDecoder().decode(parts[2].getBytes());
-                            ByteArrayInputStream bi = new ByteArrayInputStream(b);
-                            ObjectInputStream si = new ObjectInputStream(bi);
-                            WeightedMediaFilter mf = (WeightedMediaFilter) si.readObject();
 
-                            ACLMessage res = new ACLMessage(ACLMessage.PROPOSE);
+                            // Parsing message content
+                            String[] parts = msg.getContent().split(C.SEPARATOR);
+                            int count = Integer.parseInt(parts[1]);
+                            WeightedMediaFilter mf = (WeightedMediaFilter) IOUtil.deserializeFromBase64(parts[2]);
+                            // Fetching results from external source
                             List<String> results = mr.download(count, mf);
+                            ACLMessage res = new ACLMessage(ACLMessage.PROPOSE);
+
                             res.addReceiver(msg.getSender());
                             if (results == null) {
                                 res.setPerformative(ACLMessage.FAILURE);
-                                res.setContent("content:none");
-
+                                res.setContent(C.CONTENT_ACL + "none");
                             } else {
-                                res.setContent("content:" + results.toString().replaceAll("^\\[|]$", "")); // Trimming the brackets out, so Array.asList can be used later on
+                                res.setContent(C.CONTENT_ACL + results.toString().replaceAll("^\\[|]$", "")); // Trimming the brackets out, so Array.asList can be used later on
                             }
                             send(res);
                         } catch (IOException | ClassNotFoundException | NumberFormatException e) {
@@ -60,7 +67,7 @@ public class ContentManagerAgent extends Agent {
                             ACLMessage res = new ACLMessage(ACLMessage.NOT_UNDERSTOOD);
 
                             res.addReceiver(msg.getSender());
-                            res.setContent("content:unknown");
+                            res.setContent(C.CONTENT_ACL + "unknown");
                             send(res);
                         }
                     }

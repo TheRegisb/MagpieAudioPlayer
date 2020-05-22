@@ -3,10 +3,7 @@ package ro.uvt.regisb.magpie;
 import jade.core.Agent;
 import jade.core.behaviours.CyclicBehaviour;
 import jade.lang.acl.ACLMessage;
-import ro.uvt.regisb.magpie.utils.Configuration;
-import ro.uvt.regisb.magpie.utils.IOUtil;
-import ro.uvt.regisb.magpie.utils.ProcessAttributes;
-import ro.uvt.regisb.magpie.utils.TimeInterval;
+import ro.uvt.regisb.magpie.utils.*;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -24,33 +21,35 @@ public class PreferencesAgent extends Agent {
 
     @Override
     protected void setup() {
-        System.out.println("Preferences Agent online.");
-
+        // ACL messages handler
         addBehaviour(new CyclicBehaviour(this) {
             @Override
             public void action() {
                 ACLMessage msg = receive();
 
                 if (msg != null) {
+                    // Reacting to a mood change
                     if (msg.getPerformative() == ACLMessage.INFORM
-                            && msg.getContent().startsWith("mood:")) {
-                        changeCurrentMood(msg.getContent().split(":")[1]);
-                    } else if (msg.getPerformative() == ACLMessage.REQUEST && msg.getContent().equals("configuration")) {
+                            && msg.getContent().startsWith(C.MOOD_ACL)) {
+                        changeCurrentMood(msg.getContent().split(C.SEPARATOR)[1]);
+                    }
+                    // Reacting to a "restore configuration" request
+                    else if (msg.getPerformative() == ACLMessage.REQUEST && msg.getContent().equals(C.CONFIGURATION_ACL)) {
                         ACLMessage response = new ACLMessage(ACLMessage.INFORM);
 
                         response.addReceiver(msg.getSender());
                         try {
-                            response.setContent(("conf:" + IOUtil.serializeToBase64(conf)));
+                            response.setContent((C.CONFIGURATION_RESTORE_ACL + IOUtil.serializeToBase64(conf)));
                         } catch (IOException e) {
-                            response.setContent("conf;");
+                            response.setContent(C.CONFIGURATION_RESTORE_ACL);
                         }
                         send(response);
                     }
                     // Adding a new process
                     else if (msg.getPerformative() == ACLMessage.INFORM
-                            && msg.getContent().matches("^process:add:.*$")) {
+                            && msg.getContent().matches("^" + C.PROCESS_ADD_ACL + ".*$")) {
                         try {
-                            conf.addProcessAttributes((ProcessAttributes) IOUtil.deserializeFromBase64(msg.getContent().split(":")[2]));
+                            conf.addProcessAttributes((ProcessAttributes) IOUtil.deserializeFromBase64(msg.getContent().split(C.SEPARATOR)[2]));
                             exportProcessesAttributes();
                         } catch (IOException | ClassNotFoundException e) {
                             e.printStackTrace();
@@ -58,16 +57,16 @@ public class PreferencesAgent extends Agent {
                     }
                     // Removing a process
                     else if (msg.getPerformative() == ACLMessage.INFORM
-                            && msg.getContent().startsWith("process:remove:")) {
-                        if (conf.removeProcessAttributesByName(msg.getContent().split(":")[2])) {
+                            && msg.getContent().startsWith(C.PROCESS_REMOVE_ACL)) {
+                        if (conf.removeProcessAttributesByName(msg.getContent().split(C.SEPARATOR)[2])) {
                             exportProcessesAttributes();
                         }
                     }
                     // Adding a time slot
                     else if (msg.getPerformative() == ACLMessage.INFORM
-                            && msg.getContent().matches("^timeslot:add:.*$")) {
+                            && msg.getContent().matches("^" + C.TIMESLOT_ADD_ACL + ".*$")) {
                         try {
-                            conf.addTimeInterval((TimeInterval) IOUtil.deserializeFromBase64(msg.getContent().split(":")[2]));
+                            conf.addTimeInterval((TimeInterval) IOUtil.deserializeFromBase64(msg.getContent().split(C.SEPARATOR)[2]));
                             exportTimeIntervals();
                         } catch (IOException | ClassNotFoundException e) {
                             e.printStackTrace();
@@ -75,19 +74,20 @@ public class PreferencesAgent extends Agent {
                     }
                     // Removing time slot
                     else if (msg.getPerformative() == ACLMessage.INFORM
-                            && msg.getContent().matches("^timeslot:remove:\\[[012]\\d:[0-5]\\d, [012]\\d:[0-5]\\d]$")) { // timeslot is like [03:40, 13:20]
-                        if (conf.removeTimeIntervalByName(msg.getContent().substring(16))) {
+                            && msg.getContent().matches("^"
+                            + C.TIMESLOT_REMOVE_ACL
+                            + "\\[[012]\\d:[0-5]\\d, [012]\\d:[0-5]\\d]$")) { // timeslot is like [03:40, 13:20]
+                        if (conf.removeTimeIntervalByName(msg.getContent().substring(C.TIMESLOT_REMOVE_ACL.length()))) {
                             exportTimeIntervals();
                         }
                     }
                     // Editing download batch size
                     else if (msg.getPerformative() == ACLMessage.INFORM
-                            && msg.getContent().matches("^batch:\\d+$")) {
+                            && msg.getContent().matches("^" + C.BATCH_SIZE_ACL + "\\d+$")) {
                         try {
-                            exportBatchSize(Integer.parseInt(msg.getContent().split(":")[1]));
+                            exportBatchSize(Integer.parseInt(msg.getContent().split(C.SEPARATOR)[1]));
                         } catch (NumberFormatException ignored) {
                         }
-                        ;
                     }
                 } else {
                     block();
@@ -147,7 +147,7 @@ public class PreferencesAgent extends Agent {
     }
 
     private int importBatchSize() {
-        String nodeContent = magpiePrefs.get("dlbufsize", "2");
+        String nodeContent = magpiePrefs.get("dlbufsize", C.DEFAULT_BATCH_SIZE);
 
         try {
             return Integer.parseInt(nodeContent);
@@ -155,6 +155,4 @@ public class PreferencesAgent extends Agent {
             return 0;
         }
     }
-
-    // TODO add procs watchlist and time slot
 }
