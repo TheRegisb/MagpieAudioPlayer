@@ -1,4 +1,4 @@
-package ro.uvt.regisb.magpie;
+package ro.uvt.regisb.magpie.agent;
 
 import jade.core.Agent;
 import jade.core.behaviours.CyclicBehaviour;
@@ -18,7 +18,7 @@ public class ContentManagerAgent extends Agent {
 
     @Override
     protected void setup() {
-        String[] args = (String[]) getArguments();
+        String[] args = (String[]) getArguments(); // Expect arguments of style ["local", address_or_path]
 
         if (args.length != 2 || args[0] == null || args[1] == null) {
             doDelete();

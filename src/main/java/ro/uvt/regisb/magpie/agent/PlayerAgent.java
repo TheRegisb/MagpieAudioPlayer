@@ -1,4 +1,4 @@
-package ro.uvt.regisb.magpie;
+package ro.uvt.regisb.magpie.agent;
 
 import jade.core.AID;
 import jade.core.Agent;
@@ -15,7 +15,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 
 public class PlayerAgent extends Agent {
-    final JFXPanel jfxPanel = new JFXPanel();
+    final JFXPanel jfxPanel = new JFXPanel(); // Call required to boot JavaFX, even if variable is unused
     private PlayerGui gui = null;
 
     @Override
@@ -54,11 +54,20 @@ public class PlayerAgent extends Agent {
 
         // Spawning required agents
         PlatformController controller = getContainerController();
+        String[] args = (String[]) getArguments();
+
+        if (args == null) {
+            args = new String[]{"audiosample.sqlite.db", "local"};
+        }
 
         try {
             controller.createNewAgent(C.PREFERENCES_AID, PreferencesAgent.class.getCanonicalName(), null).start();
             controller.createNewAgent(C.PLAYLIST_AID, PlaylistAgent.class.getCanonicalName(), null).start();
-            controller.createNewAgent(C.CONTENTMNGR_AID, ContentManagerAgent.class.getCanonicalName(), new String[]{"local", "audiosample.sqlite.db"}).start(); // TODO change to variables
+            controller.createNewAgent(C.CONTENTMNGR_AID, ContentManagerAgent.class.getCanonicalName(),
+                    new String[]{ // Trying to use the provided arguments, or fallback to default
+                            args.length >= 2 && args[1] != null ? args[1] : "local",
+                            args.length >= 1 && args[0] != null ? args[0] : "audiosample.sqlite.db"
+                    }).start(); // TODO respond to exception from bad adapter
             controller.createNewAgent(C.PROCESSES_AID, ProcessesAgent.class.getCanonicalName(), null).start();
             controller.createNewAgent(C.TIME_AID, TimeAgent.class.getCanonicalName(), null).start();
             controller.createNewAgent(C.MOOD_AID, MoodAgent.class.getCanonicalName(), null).start();

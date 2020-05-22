@@ -1,4 +1,4 @@
-package ro.uvt.regisb.magpie;
+package ro.uvt.regisb.magpie.agent;
 
 import jade.core.Agent;
 import jade.core.behaviours.CyclicBehaviour;

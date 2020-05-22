@@ -1,4 +1,4 @@
-package ro.uvt.regisb.magpie;
+package ro.uvt.regisb.magpie.agent;
 
 import jade.core.AID;
 import jade.core.Agent;
