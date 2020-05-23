@@ -93,7 +93,8 @@ Usage:
 The project can be compiled into a standalone JAR file using Maven:
 `mvn clean package`
 and use the resulting "with-dependencies" JAR file.
-A binary release is available at: $$
+A binary release is available at:
+https://github.com/TheRegisb/MagpieAudioPlayer/releases/tag/1.0
 
 Alternatively, the PlayerAgent can be used to boot the entire
 application using Jade.Boot after the project compilation:
@@ -106,6 +107,8 @@ application.
 
 A complete working example including a binary release, audio files and
 their dedicated database is available here
+https://github.com/TheRegisb/MagpieAudioPlayer/releases/tag/1.0
+or here
 https://mega.nz/file/AA8BSCJC#0Xddb0gbVK5sS616muRhiNyDAejI0XfXloJQW2EYQOQ
 Decompress all files into the same folder and execute the JAR.
 
