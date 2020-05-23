@@ -6,9 +6,20 @@ import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Local SQLite3 adapter.
+ * Connect to a local, project-compliant SQLite3 database
+ * to query and return its media paths.
+ */
 public class LocalSqliteAdapter implements MediaRetriever {
     private Connection conn = null;
 
+    /**
+     * Connect to a database file.
+     *
+     * @param address Local SQL file path.
+     * @return Success of the connection.
+     */
     @Override
     public boolean connect(String address) {
         if (conn != null) {
@@ -23,6 +34,14 @@ public class LocalSqliteAdapter implements MediaRetriever {
         }
     }
 
+    /**
+     * Retrieve media paths from the connected source.
+     *
+     * @param total  Media to download.
+     * @param filter Media filter, expected to be a WeightedMediaFilter.
+     * @return List of local paths.
+     * @see WeightedMediaFilter
+     */
     @Override
     public List<String> download(int total, Object filter) {
         WeightedMediaFilter mf = (WeightedMediaFilter) filter;
@@ -62,6 +81,12 @@ public class LocalSqliteAdapter implements MediaRetriever {
         }
     }
 
+    /**
+     * Generate a SQLite3 statement from a filter.
+     * @param mf Media filter.
+     * @param count Media to download.
+     * @return SQL statement literal.
+     */
     private String generateStatementFrom(WeightedMediaFilter mf, int count) {
         StringBuilder sb = new StringBuilder();
 
@@ -110,6 +135,12 @@ public class LocalSqliteAdapter implements MediaRetriever {
         return sb.toString();
     }
 
+    /**
+     * Execute SQL query literal to the connected database.
+     * @param query SQL query literal.
+     * @return Result of the query.
+     * @throws SQLException On statement execution failure.
+     */
     private ResultSet executeQuery(String query) throws SQLException {
         Statement stmt = conn.createStatement();
 

@@ -19,6 +19,9 @@ import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.io.File;
 
+/**
+ * Audio player GUI.
+ */
 public class PlayerGui extends JFrame {
     // From the .form
     private JPanel panel1;
@@ -46,7 +49,6 @@ public class PlayerGui extends JFrame {
     private JScrollPane playlistScrollPane;
     private JSpinner batchSizeSpinner;
     private JLabel playtimeLabel;
-    private String onStopPressed;
 
     private boolean sliderDragged = false;
     private boolean stillPlaying = false;
@@ -56,6 +58,13 @@ public class PlayerGui extends JFrame {
     protected PlayerAgent owner;
     protected MediaPlayer mediaPlayer = null;
 
+    /**
+     * Default constructor.
+     * Create the frame and assign its owner.
+     *
+     * @param owner A valid PlayerAgent.
+     * @see PlayerAgent
+     */
     public PlayerGui(final PlayerAgent owner) {
         super("Magpie Audio Player");
 
@@ -306,26 +315,54 @@ public class PlayerGui extends JFrame {
         });
     }
 
+    /**
+     * Get "Current Mood" box.
+     *
+     * @return Combo box for the "Current Mood".
+     */
     public JComboBox getCurrentMoodBox() {
         return currentMoodBox;
     }
 
+    /**
+     * Get "Download Batch Size" spinner.
+     * @return Spinner for the "Download Batch Size".
+     */
     public JSpinner getBatchSizeSpinner() {
         return batchSizeSpinner;
     }
 
+    /**
+     * Get the "Information" label.
+     * @return The "Information" label.
+     */
     public JLabel getInfoLabel() {
         return infoLabel;
     }
 
+    /**
+     * Add a process label to the processes list.
+     * Process integration should be synchronized with the ProcessesAgent by the caller.
+     * @param label Name of the process.
+     */
     public void addProcessLabel(String label) {
         ((DefaultListModel) processesList.getModel()).addElement(label);
     }
 
+    /**
+     * Add a time interval literal to the time slot list.
+     * Time slot integration should be synchronized with the TimeAgent by the caller.
+     * @param label Time interval literal.
+     * @see TimeInterval
+     */
     public void addTimeLabel(String label) {
         ((DefaultListModel) timeSlotList.getModel()).addElement(label);
     }
 
+    /**
+     * Add local paths to a valid media.
+     * @param medias Paths literal.
+     */
     public void addMediaPaths(java.util.List<String> medias) {
         DefaultListModel listContent = ((DefaultListModel) playList.getModel());
 
@@ -335,12 +372,24 @@ public class PlayerGui extends JFrame {
         infoLabel.setText("Info: Added " + medias.size() + " more track" + (medias.size() > 1 ? "s." : "."));
     }
 
+    /**
+     * Enable or disable remote error state.
+     * @param state Is the remote error active.
+     * @param what Description of the error.
+     */
     public void setErrorState(boolean state, String what) {
         remoteError = true;
         errorDesc = what;
         infoLabel.setText(what);
     }
 
+    /**
+     * Create a new MediaPlayer for the given Media.
+     * Create a new MediaPlayer that load the next media in playlist on end and
+     * update both the info and time-lapse labels at playtime?
+     * @param hit Media to be played immediately.
+     * @return A MediaPlayer with the described properties.
+     */
     private MediaPlayer autoPlayerFrom(Media hit) {
         mediaPlayer = new MediaPlayer(hit);
 
@@ -382,6 +431,9 @@ public class PlayerGui extends JFrame {
         return mediaPlayer;
     }
 
+    /**
+     * Override the form's default components creation.
+     */
     private void createUIComponents() {
         processesList = new JList<>(new DefaultListModel<>());
         timeSlotList = new JList<>(new DefaultListModel<>());

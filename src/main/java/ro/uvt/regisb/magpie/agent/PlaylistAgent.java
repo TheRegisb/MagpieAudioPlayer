@@ -7,15 +7,21 @@ import jade.lang.acl.ACLMessage;
 import org.apache.commons.lang3.tuple.Pair;
 import ro.uvt.regisb.magpie.utils.*;
 
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.util.Base64;
 
+/**
+ * Playlist manager agent.
+ * Make the bridge between the PlayerAgent and the ContentManagerAgent.
+ * Uses information provided by the other agent to generate a
+ * pertinent media filter.
+ */
 public class PlaylistAgent extends Agent {
-    // TODO stores current tags weight
     private WeightedMediaFilter filter = new WeightedMediaFilter();
 
+    /**
+     * Agent setup.
+     * Setup ACL message handler, to support media query and response and tags effects.
+     */
     @Override
     protected void setup() {
         addBehaviour(new CyclicBehaviour(this) {
@@ -49,19 +55,23 @@ public class PlaylistAgent extends Agent {
                     // Reacting to time slot notification
                     else if (msg.getPerformative() == ACLMessage.PROPOSE
                             && msg.getContent().matches("^" + C.TIMESLOT_OBJ_ACL + ".*$")) {
-                        TimeInterval ti = (TimeInterval) deserializeFromBase64(msg.getContent().split(C.SEPARATOR)[1]);
+                        try {
+                            TimeInterval ti = (TimeInterval) IOUtil.deserializeFromBase64(msg.getContent().split(C.SEPARATOR)[1]);
 
-                        if (ti != null) {
                             applyTags(ti.getTags());
+                        } catch (IOException | ClassNotFoundException e) {
+                            e.printStackTrace();
                         }
                     }
                     // Reacting to a process notification
                     else if (msg.getPerformative() == ACLMessage.PROPOSE
                             && msg.getContent().matches("^" + C.PROCESS_OBJ_ACL + ".*$")) {
-                        ProcessAttributes pa = (ProcessAttributes) deserializeFromBase64(msg.getContent().split(C.SEPARATOR)[1]);
+                        try {
+                            ProcessAttributes pa = (ProcessAttributes) IOUtil.deserializeFromBase64(msg.getContent().split(C.SEPARATOR)[1]);
 
-                        if (pa != null) {
                             applyTags(pa.getTags());
+                        } catch (IOException | ClassNotFoundException e) {
+                            e.printStackTrace();
                         }
                     }
                 } else {
@@ -71,6 +81,12 @@ public class PlaylistAgent extends Agent {
         });
     }
 
+    /**
+     * Apply a set of tag to the current filter.
+     *
+     * @param tags Tags to apply.
+     * @see Tags
+     */
     private void applyTags(Tags tags) {
         for (Pair<String, Integer> f : tags.getFeel()) {
             filter.addFeel(f.getKey(), f.getValue());
@@ -85,19 +101,13 @@ public class PlaylistAgent extends Agent {
         }
     }
 
-    private Object deserializeFromBase64(String serialized) {
-        try {
-            byte[] b = Base64.getDecoder().decode(serialized.getBytes());
-            ByteArrayInputStream bi = new ByteArrayInputStream(b);
-            ObjectInputStream si = new ObjectInputStream(bi);
-
-            return si.readObject();
-        } catch (IOException | ClassNotFoundException e) {
-            e.printStackTrace();
-        }
-        return null;
-    }
-
+    /**
+     * Notify the ContentManagerAgent of a content request.
+     * Generate a REQUEST ACL message to the ContentManagerAgent
+     * using the source message and the instance's current filter.
+     *
+     * @param msg Source request.
+     */
     private void requestMoreContent(ACLMessage msg) {
         try {
             int totalToBeAdded = Integer.parseInt(msg.getContent().split(":")[1]);

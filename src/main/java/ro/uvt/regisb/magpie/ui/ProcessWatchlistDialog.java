@@ -4,6 +4,10 @@ import ro.uvt.regisb.magpie.utils.ProcessAttributes;
 
 import javax.swing.*;
 
+/**
+ * Panel for process monitoring registration.
+ * Intended to be used as a modal.
+ */
 public class ProcessWatchlistDialog extends JPanel {
     private JList tagsList;
     private JList includeList;
@@ -19,10 +23,14 @@ public class ProcessWatchlistDialog extends JPanel {
     private JPanel panel;
     private JLabel processNameLabel;
 
-    boolean isChanging = false;
+    private boolean isChanging = false;
 
+    /**
+     * Default constructor.
+     */
     public ProcessWatchlistDialog() {
         add(panel);
+        // Listener for tag permutation: from the shared list to the inclusion or exclusion list.
         tagsList.addListSelectionListener(e -> {
             if (!isChanging) {
                 isChanging = true;
@@ -74,6 +82,12 @@ public class ProcessWatchlistDialog extends JPanel {
         });
     }
 
+    /**
+     * Generate a modal from the instance.
+     *
+     * @return The termination status of an OK/Cancel plain-message modal.
+     * @see JOptionPane
+     */
     public int showDialog() {
         return JOptionPane.showOptionDialog(null, this,
                 "Monitor Process",
@@ -81,10 +95,19 @@ public class ProcessWatchlistDialog extends JPanel {
                 new String[]{"OK", "Cancel"}, "OK");
     }
 
+    /**
+     * Get process name.
+     *
+     * @return The user-provided process name.
+     */
     public String getProcessName() {
         return processNameTextField.getText();
     }
 
+    /**
+     * Get the process attributes.
+     * @return The user-provided attributes.
+     */
     public ProcessAttributes getProcessAttributes() {
         ProcessAttributes attrs = new ProcessAttributes(processNameTextField.getText());
 
@@ -101,6 +124,9 @@ public class ProcessWatchlistDialog extends JPanel {
         return attrs;
     }
 
+    /**
+     * Override the form's default components creation.
+     */
     private void createUIComponents() {
         includeList = new JList<>(new DefaultListModel<>());
         excludeList = new JList<>(new DefaultListModel<>());

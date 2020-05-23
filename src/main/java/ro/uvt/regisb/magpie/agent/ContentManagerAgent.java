@@ -14,9 +14,20 @@ import java.io.File;
 import java.io.IOException;
 import java.util.List;
 
+/**
+ * Remote and local content manager agent.
+ * Setup media retrievers and respond to playlist expansion requests.
+ * Agent self-delete on failure to setup media retrievers.
+ */
 public class ContentManagerAgent extends Agent {
     private MediaRetriever mr = null;
 
+    /**
+     * Agent setup.
+     * Instantiate the media retrievers using the agent's arguments
+     * and setup the ACL messages handlers.
+     * Argument are expected to be [adapter format, address].
+     */
     @Override
     protected void setup() {
         String[] args = (String[]) getArguments(); // Expect arguments of style ["local", address_or_path]
@@ -81,6 +92,9 @@ public class ContentManagerAgent extends Agent {
         });
     }
 
+    /**
+     * Disconnect from the remote source on deletion.
+     */
     @Override
     protected void takeDown() {
         super.takeDown();
@@ -89,6 +103,13 @@ public class ContentManagerAgent extends Agent {
         }
     }
 
+    /**
+     * Send a FAILURE ACL message to the PlayerAgent
+     * with the description of the error.
+     *
+     * @param what Description of the error.
+     * @see PlayerAgent
+     */
     private void informPlayerOfFailure(String what) {
         ACLMessage msg = new ACLMessage(ACLMessage.FAILURE);
 

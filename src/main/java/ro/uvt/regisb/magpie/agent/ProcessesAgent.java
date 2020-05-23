@@ -14,9 +14,17 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * System processes monitor agent.
+ * Bind system processes execution to set of tags.
+ */
 public class ProcessesAgent extends Agent {
     private List<ProcessAttributes> watchlist = new ArrayList<>();
 
+    /**
+     * Agent setup.
+     * Enable runtime system process binding, ACL message handler and previous configuration restoration.
+     */
     @Override
     protected void setup() {
         // Processes monitoring
@@ -111,10 +119,21 @@ public class ProcessesAgent extends Agent {
         send(confRequest);
     }
 
+    /**
+     * Apply the processes attributes of a configuration.
+     *
+     * @param conf Configuration preset.
+     */
     private void applyConfiguration(Configuration conf) {
         watchlist.addAll(conf.getProcessesAttributes());
     }
 
+    /**
+     * Check if a process is registered by name.
+     *
+     * @param processName Name of the process to check.
+     * @return The registration (or lack of) of the given process.
+     */
     private boolean processInWatchlist(String processName) {
         for (ProcessAttributes pa : watchlist) {
             if (processName.contains(pa.getName())) { // TODO less naive checking
@@ -124,10 +143,12 @@ public class ProcessesAgent extends Agent {
         return false;
     }
 
+    /**
+     * Notify the PlaylistAgent of the effects of a process going live or down.
+     * @param processAttributes Attributes of the bound process.
+     * @param deleted Is the process shutting down.
+     */
     private void notifyPlaylistAgent(ProcessAttributes processAttributes, boolean deleted) {
-        if (deleted && !processInWatchlist(processAttributes.getName())) { // Process was unmonitored while the process was running.
-            return;
-        }
         try {
             ACLMessage msg = new ACLMessage(ACLMessage.PROPOSE);
 
@@ -139,6 +160,11 @@ public class ProcessesAgent extends Agent {
         }
     }
 
+    /**
+     * Get a process attribute for a process name.
+     * @param name Name of the process to find its attributes.
+     * @return (1) Bound process attributes or (2) null if process is not bound.
+     */
     private ProcessAttributes getProcessAttributesByName(String name) {
         for (ProcessAttributes pa : watchlist) {
             if (name.contains(pa.getName())) { // TODO less naive checking

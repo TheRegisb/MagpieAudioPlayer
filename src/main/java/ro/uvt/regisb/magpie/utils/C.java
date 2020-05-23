@@ -1,5 +1,9 @@
 package ro.uvt.regisb.magpie.utils;
 
+/**
+ * Constants.
+ * Ensemble of final static fields of recurring values through the project.
+ */
 public class C {
     public final static String SEPARATOR = ":";
 

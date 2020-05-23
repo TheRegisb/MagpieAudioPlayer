@@ -14,10 +14,19 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 
+/**
+ * Audio player agent.
+ * Core agent acting as a bridge between the UI and the other agents.
+ * Must be the first and only agent to be spawned externally.
+ */
 public class PlayerAgent extends Agent {
     final JFXPanel jfxPanel = new JFXPanel(); // Call required to boot JavaFX, even if variable is unused
     private PlayerGui gui = null;
 
+    /**
+     * Agent setup.
+     * Setup ACL messages handlers, spawn required agents, setup UI and restore previous configuration.
+     */
     @Override
     protected void setup() {
         addBehaviour(new CyclicBehaviour(this) { // ACL Message reader
@@ -92,6 +101,12 @@ public class PlayerAgent extends Agent {
         send(msg);
     }
 
+    /**
+     * Apply a configuration preset to the UI.
+     *
+     * @param conf Configuration preset.
+     * @see Configuration
+     */
     private void applyConfiguration(Configuration conf) {
         gui.getCurrentMoodBox().setSelectedItem(conf.getMood());
         for (ProcessAttributes e : conf.getProcessesAttributes()) {
@@ -104,6 +119,11 @@ public class PlayerAgent extends Agent {
         gui.getInfoLabel().setText("Info: Successfully restored preferences.");
     }
 
+    /**
+     * Spawn a PlayerGui assigned to this instance.
+     *
+     * @see PlayerGui
+     */
     private void setupUi() {
         gui = new PlayerGui(this); // Create a new PlayerGui owned by this agent.
 
@@ -111,6 +131,11 @@ public class PlayerAgent extends Agent {
         gui.validate();
     }
 
+    /**
+     * Notify agents of mood change.
+     * Broadcast the new mood literal to concerned agents.
+     * @param mood Mood literal.
+     */
     public void broadcastNewMood(String mood) {
         ACLMessage msg = new ACLMessage(ACLMessage.INFORM);
 
@@ -120,6 +145,11 @@ public class PlayerAgent extends Agent {
         send(msg);
     }
 
+    /**
+     * Notify agents of process registration.
+     * Broadcast the attributes to concerned agents.
+     * @param proc New process' attributes.
+     */
     public void broadcastProcessMonitored(ProcessAttributes proc) {
         try {
             ACLMessage msg = new ACLMessage(ACLMessage.INFORM);
@@ -133,6 +163,11 @@ public class PlayerAgent extends Agent {
         }
     }
 
+    /**
+     * Notify agents of process un-registration.
+     * Broadcast the process name to the concerned agents.
+     * @param procName Name of the removed process.
+     */
     public void broadcastProcessUnmonitored(String procName) {
         ACLMessage msg = new ACLMessage(ACLMessage.INFORM);
 
@@ -142,6 +177,11 @@ public class PlayerAgent extends Agent {
         send(msg);
     }
 
+    /**
+     * Notify agents of time slot registration.
+     * Broadcast the attributes to concerned agents.
+     * @param interval New time slot' attributes.
+     */
     public void broadcastTimeSlotRegister(TimeInterval interval) {
         try {
             ACLMessage msg = new ACLMessage(ACLMessage.INFORM);
@@ -155,6 +195,12 @@ public class PlayerAgent extends Agent {
         }
     }
 
+    /**
+     * Notify agents of time slot un-regitration.
+     * Broadcast the time slot name to concerned agents.
+     * @param slotName TimeInterval literal.
+     * @see TimeInterval
+     */
     public void broadcastTimeSlotUnregister(String slotName) {
         ACLMessage msg = new ACLMessage(ACLMessage.INFORM);
 
@@ -164,6 +210,11 @@ public class PlayerAgent extends Agent {
         send(msg);
     }
 
+    /**
+     * Notify agents of download batch size change.
+     * Broadcast the new batch size to concerned agents.
+     * @param batchSize New download batch size.
+     */
     public void broadcastBatchSizeChange(int batchSize) {
         ACLMessage msg = new ACLMessage(ACLMessage.INFORM);
 
@@ -172,6 +223,10 @@ public class PlayerAgent extends Agent {
         send(msg);
     }
 
+    /**
+     * Request more medias from PlaylistAgent.
+     * @param batchSize Number of medias to retrieve.
+     */
     public void requestPlaylistExpansion(int batchSize) {
         ACLMessage msg = new ACLMessage(ACLMessage.REQUEST);
 

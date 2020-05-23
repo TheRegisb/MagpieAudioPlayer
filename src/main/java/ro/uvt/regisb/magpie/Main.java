@@ -7,13 +7,27 @@ import jade.wrapper.StaleProxyException;
 import ro.uvt.regisb.magpie.agent.PlayerAgent;
 import ro.uvt.regisb.magpie.utils.C;
 
+/**
+ * Standalone Magpie launcher.
+ * Can be used to automatically start the JADE platform and populate its container
+ * with Magpie's agents.
+ */
 public class Main {
+    /**
+     * Main method.
+     * Start the JADE platform and populate it with Magpie's agents
+     * using the provided arguments or their default fallback.
+     *
+     * @param argv Command line arguments. Expected: [source, adapter]. Default: ["audiosample.sqlite.db", "local"].
+     * @throws StaleProxyException Unable to start the JADE platform or create containers.
+     */
     public static void main(String[] argv) throws StaleProxyException {
         if (argv == null || (argv.length > 1 && argv[0].contains("-help"))) {
             System.out.println("Usage: magpie (source) (adapter)" + System.lineSeparator()
                     + "Default: audiosample.sqlite.db local");
             return;
         }
+        // Arguments normalization
         String[] playerArgs = new String[2];
 
         playerArgs[0] = (argv.length >= 1 ? argv[0] : "audiosample.sqlite.db");

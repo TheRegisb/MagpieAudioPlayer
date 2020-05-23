@@ -6,17 +6,36 @@ import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
 
+/**
+ * Monitored time slot and its attributes.
+ * Encompass an hour-minute time interval, its tags and their weight.
+ *
+ * @see Tags
+ */
 public class TimeInterval implements Serializable {
     private Calendar startTime = Calendar.getInstance();
     private Calendar stopTime = Calendar.getInstance();
     private Tags tags = new Tags();
     private transient boolean isActive = false;
 
+    /**
+     * Default constructor.
+     * Create a new TimeInterval with empty tags.
+     * Support days overlaps, e.g. 22:30 - 06:15.
+     *
+     * @param start Start of the time interval, as "HH:mm"
+     * @param stop  End of the time interval. as "HH:mm"
+     * @throws ParseException Arguments where not formatted as "HH:mm"
+     */
     public TimeInterval(String start, String stop) throws ParseException {
         startTime.setTime(new SimpleDateFormat("HH:mm").parse(start));
         stopTime.setTime(new SimpleDateFormat("HH:mm").parse(stop));
     }
 
+    /**
+     * Copy constructor.
+     * @param ti Instance to copy.
+     */
     public TimeInterval(TimeInterval ti) {
         this.startTime = ti.startTime;
         this.stopTime = ti.stopTime;
@@ -24,8 +43,14 @@ public class TimeInterval implements Serializable {
         this.tags = ti.tags;
     }
 
+    /**
+     * Check if a Date is in the interval.
+     * @param time Date to check, whose day must be set to 1970-01-01
+     * @return The inclusion of time in the interval.
+     */
     public boolean isTimeInInterval(Date time) {
         Calendar current = Calendar.getInstance();
+        // Offset are used to support day overlaps.
         boolean revertStart = false;
         boolean revertStop = false;
         boolean isIn = false;
@@ -45,31 +70,51 @@ public class TimeInterval implements Serializable {
             }
             isIn = current.before(stopTime);
         }
+        // As the instance's member where affected, the offset must be removed for subsequent checks.
         startTime.add(Calendar.DATE, (revertStart ? -1 : 0));
         stopTime.add(Calendar.DATE, (revertStop ? -1 : 0));
         return isIn;
     }
 
+    /**
+     * Compare a time interval literal to the instance interval.
+     * @param ti A string formatted as "[HH:mm, HH:mm]".
+     * @return The equivalence of both intervals.
+     */
     public boolean equals(String ti) {
         return this.toString().equals(ti);
     }
 
-    public boolean equals(TimeInterval ti) {
-        return this.toString().equals(ti.toString()) && tags.equals(ti.getTags());
-    }
-
+    /**
+     * Get tags.
+     * @return Time slot's tags.
+     * @see Tags
+     */
     public Tags getTags() {
         return tags;
     }
 
+    /**
+     * Get time slot activity.
+     * @return (1) true if the attributes of this instance are in effect or (2) false otherwise.
+     */
     public boolean isActive() {
         return isActive;
     }
 
+    /**
+     * Set time slot activity.
+     * Enable or disable the attributes effects.
+     * @param active Bound time slot activity.
+     */
     public void setActive(boolean active) {
         isActive = active;
     }
 
+    /**
+     * Describe the instance in a human-readable fashion.
+     * @return A string describing the value of each field of the instance.
+     */
     @Override
     public String toString() {
         return String.format("[%02d:%02d, %02d:%02d]",
@@ -77,6 +122,10 @@ public class TimeInterval implements Serializable {
                 stopTime.get(Calendar.HOUR_OF_DAY), stopTime.get(Calendar.MINUTE));
     }
 
+    /**
+     * Inverse the tags weight of the process.
+     * @return A copy of the instance with the opposite tags weight.
+     */
     public TimeInterval invert() {
         TimeInterval inverse = new TimeInterval(this);
 

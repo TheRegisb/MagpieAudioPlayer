@@ -10,6 +10,14 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.prefs.Preferences;
 
+/**
+ * Configuration saver and restorer.
+ * Store the current configuration of the Magpie player and its updates at runtime to a Preferences node.
+ * Used to transmit Configuration object to restore agents previous setup.
+ *
+ * @see Preferences
+ * @see Configuration
+ */
 public class PreferencesAgent extends Agent {
     private Preferences magpiePrefs = Preferences.userRoot().node("ro/uvt/regisb/magpie/preferences"); // For Windows, HKEY_LOCAL_MACHINE\SOFTWARE\JavaSoft\Prefs must be created by hand
     private Configuration conf = new Configuration(
@@ -19,6 +27,10 @@ public class PreferencesAgent extends Agent {
             importBatchSize()
     );
 
+    /**
+     * Agent setup.
+     * Setup the ACL message handling, from which start all other methods invocation.
+     */
     @Override
     protected void setup() {
         // ACL messages handler
@@ -83,9 +95,12 @@ public class PreferencesAgent extends Agent {
                     }
                     // Editing download batch size
                     else if (msg.getPerformative() == ACLMessage.INFORM
-                            && msg.getContent().matches("^" + C.BATCH_SIZE_ACL + "\\d+$")) {
+                            && msg.getContent().matches("^" + C.BATCH_SIZE_ACL + "(?!(-))\\d+$")) {
                         try {
-                            exportBatchSize(Integer.parseInt(msg.getContent().split(C.SEPARATOR)[1]));
+                            int batchSize = Integer.parseInt(msg.getContent().split(C.SEPARATOR)[1]);
+
+                            conf.setBatchSize(batchSize);
+                            exportBatchSize();
                         } catch (NumberFormatException ignored) {
                         }
                     }
@@ -96,10 +111,21 @@ public class PreferencesAgent extends Agent {
         });
     }
 
+    /**
+     * Update the mood.
+     * Updates the mood in the active Configuration object and in the preferences node.
+     *
+     * @param mood Current mood literal.
+     */
     private void changeCurrentMood(String mood) {
+        conf.setCurrentMood(mood);
         magpiePrefs.put("mood", mood);
     }
 
+    /**
+     * Persist time slots.
+     * Serialize the current state of the Configuration's time slot to the preferences node.
+     */
     private void exportTimeIntervals() {
         try {
             magpiePrefs.put("timeslots", IOUtil.serializeToBase64(conf.getTimeIntervals()));
@@ -108,6 +134,10 @@ public class PreferencesAgent extends Agent {
         }
     }
 
+    /**
+     * Persist processes attributes.
+     * Serialize the current state of the Configuration's processes attributes to the preferences node.
+     */
     private void exportProcessesAttributes() {
         try {
             magpiePrefs.put("procsattrs", IOUtil.serializeToBase64(conf.getProcessesAttributes()));
@@ -116,10 +146,20 @@ public class PreferencesAgent extends Agent {
         }
     }
 
-    private void exportBatchSize(int batchSize) {
-        magpiePrefs.put("dlbufsize", Integer.toString(batchSize));
+    /**
+     * Persist batch size.
+     * Serialize the current state of the Configuration's batch size to the preferences node.
+     */
+    private void exportBatchSize() {
+        magpiePrefs.put("dlbufsize", Integer.toString(conf.getBatchSize()));
     }
 
+    /**
+     * Import time slots.
+     * Deserialize the content of the preferences' time slot into a list of TimeInterval.
+     * @return A list of TimeInterval. Empty on error.
+     * @see TimeInterval
+     */
     private List<TimeInterval> importTimeIntervals() {
         String nodeContent = magpiePrefs.get("timeslots", "");
 
@@ -133,6 +173,12 @@ public class PreferencesAgent extends Agent {
         return new ArrayList<>();
     }
 
+    /**
+     * Import processes attributes.
+     * Deserialize the content of the preferences' processes attributes into a list of ProcessAttributes.
+     * @return A list of ProcessAttributes. Empty on error.
+     * @see ProcessAttributes
+     */
     private List<ProcessAttributes> importProcessesAttributes() {
         String nodeContent = magpiePrefs.get("procsattrs", "");
 
@@ -146,13 +192,18 @@ public class PreferencesAgent extends Agent {
         return new ArrayList<>();
     }
 
+    /**
+     * Import download batch size.
+     * @return A batch size. Default batch size constant on error.
+     * @see C
+     */
     private int importBatchSize() {
         String nodeContent = magpiePrefs.get("dlbufsize", C.DEFAULT_BATCH_SIZE);
 
         try {
             return Integer.parseInt(nodeContent);
         } catch (NumberFormatException e) {
-            return 0;
+            return Integer.parseInt(C.DEFAULT_BATCH_SIZE);
         }
     }
 }

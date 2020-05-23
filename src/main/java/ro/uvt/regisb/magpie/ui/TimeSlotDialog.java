@@ -7,6 +7,10 @@ import java.text.ParseException;
 import java.util.Calendar;
 import java.util.Date;
 
+/**
+ * Panel for time slot monitoring registration.
+ * Intended to be used as a modal.
+ */
 public class TimeSlotDialog extends JPanel {
     private JList tagsList;
     private JList includeList;
@@ -24,8 +28,12 @@ public class TimeSlotDialog extends JPanel {
 
     private boolean isChanging = false;
 
+    /**
+     * Default constructor.
+     */
     public TimeSlotDialog() {
         add(panel1);
+        // Listener for tags selection: From the shared list to inclusion/exclusion list and vice versa.
         tagsList.addListSelectionListener(e -> { // TODO consider making a common 'Tags Selection' panel
             if (!isChanging) {
                 isChanging = true;
@@ -77,6 +85,9 @@ public class TimeSlotDialog extends JPanel {
         });
     }
 
+    /**
+     * Override form's default components creation.
+     */
     private void createUIComponents() {
         timeStartSpinner = new JSpinner(new SpinnerDateModel(new Date(), null, null, Calendar.MINUTE));
         timeStartSpinner.setEditor(new JSpinner.DateEditor(timeStartSpinner, "HH:mm"));
@@ -87,6 +98,12 @@ public class TimeSlotDialog extends JPanel {
         excludeList = new JList<>(new DefaultListModel<>());
     }
 
+    /**
+     * Generate a modal from the instance.
+     *
+     * @return The termination status of an OK/Cancel plain-message modal.
+     * @see JOptionPane
+     */
     public int showDialog() {
         return JOptionPane.showOptionDialog(null, this,
                 "Time Slot Definition",
@@ -94,6 +111,11 @@ public class TimeSlotDialog extends JPanel {
                 new String[]{"OK", "Cancel"}, "OK");
     }
 
+    /**
+     * Generate a TimeInterval.
+     *
+     * @return A TimeInterval based on the user-given attributes.
+     */
     public TimeInterval getTimeInterval() {
         try {
             Calendar start = Calendar.getInstance();

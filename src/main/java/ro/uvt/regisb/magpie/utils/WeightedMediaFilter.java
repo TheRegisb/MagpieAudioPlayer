@@ -7,12 +7,34 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * List of tags and precise BPM selector.
+ * Encompass "genre", "feel" and BPM tags for media selection.
+ */
 public class WeightedMediaFilter implements Serializable {
+    /**
+     * Granular representation of BPM tweaks.
+     */
     public enum BPMClassification {
+        /**
+         * Must have a high BPM and must not have a low BPM.
+         */
         ENERGETIC,
+        /**
+         * Must not have a low BPM.
+         */
         NOT_CALM,
+        /**
+         * BPM are not to be taken in account.
+         */
         NEUTRAL,
+        /**
+         * Must not have a high BPM.
+         */
         NOT_ENERGETIC,
+        /**
+         * Must have a low BPM and must not have a high BPM.
+         */
         CALM
     }
 
@@ -22,12 +44,19 @@ public class WeightedMediaFilter implements Serializable {
     private int lowBPMCount;
     private int highBPMCount;
 
-    // Default constructor
+    /**
+     * Default constructor.
+     */
     public WeightedMediaFilter() {
         genre = new ArrayList<>();
         feel = new ArrayList<>();
     }
 
+    /**
+     * Copy constructor.
+     *
+     * @param filter Instance to copy.
+     */
     private WeightedMediaFilter(WeightedMediaFilter filter) {
         this.genre = new ArrayList<>(filter.genre);
         this.feel = new ArrayList<>(filter.feel);
@@ -35,7 +64,13 @@ public class WeightedMediaFilter implements Serializable {
         this.highBPMCount = filter.highBPMCount;
     }
 
-    // Functions
+    /**
+     * Add or update a "genre" tag.
+     * Add or update a "genre" tag and remove tags whose weight are equal to zero.
+     *
+     * @param genre Tag name.
+     * @param count Weight of the tag. Positive for inclusion and negative for exclusion.
+     */
     public void addGenre(String genre, int count) {
         // Checking if genre not already in list
         boolean alreadyPresent = false;
@@ -59,10 +94,12 @@ public class WeightedMediaFilter implements Serializable {
         this.genre.removeIf(e -> e.getValue() == 0);
     }
 
-    public void addGenre(String genre) {
-        addGenre(genre, 1);
-    }
-
+    /**
+     * Add or update a "feel" tag.
+     * Add or update a "feel" tag and remove tags whose weight are equal to zero.
+     * @param feel Tag name.
+     * @param count Weight of the tag. Positive for inclusion and negative for exclusion.
+     */
     public void addFeel(String feel, int count) {
         boolean alreadyPresent = false;
         // Checking if feel not already in list
@@ -85,18 +122,26 @@ public class WeightedMediaFilter implements Serializable {
         this.feel.removeIf(e -> e.getValue() == 0);
     }
 
-    public void addFeel(String feel) {
-        addFeel(feel, 1);
-    }
-
+    /**
+     * Adjust the weight of low BPM preference.
+     * @param count Tweak weight. Positive for inclusion and negative for exclusion.
+     */
     public void tweakLowBPMCount(int count) {
         lowBPMCount += count;
     }
 
+    /**
+     * Adjust the weight of high BPM preference.
+     * @param count Tweak weight. Positive for inclusion and negative for exclusion.
+     */
     public void tweakHighBPMCount(int count) {
         highBPMCount += count;
     }
 
+    /**
+     * Discard the tag with the lowest weight.
+     * @return A copy of the instance without its lowest-value tag.
+     */
     public WeightedMediaFilter loosenConstrains() {
         WeightedMediaFilter filter = new WeightedMediaFilter(this);
 
@@ -116,7 +161,11 @@ public class WeightedMediaFilter implements Serializable {
         return filter;
     }
 
-    // Procedural getters
+    /**
+     * Get BPM classification.
+     * @return BPM classification.
+     * @see BPMClassification
+     */
     public BPMClassification getBPM() {
         if (highBPMCount == 0 && lowBPMCount == 0) {
             return BPMClassification.NEUTRAL;
@@ -139,15 +188,26 @@ public class WeightedMediaFilter implements Serializable {
         }
     }
 
-    // Generic getters
+    /**
+     * Get "genre" tags.
+     * @return "genre" tags list.
+     */
     public List<Pair<String, Integer>> getGenre() {
         return genre;
     }
 
+    /**
+     * Get "feel" tags.
+     * @return "feel" tags list.
+     */
     public List<Pair<String, Integer>> getFeel() {
         return feel;
     }
 
+    /**
+     * Stringify the instance.
+     * @return A human-readable string of the instances fields and value.
+     */
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();

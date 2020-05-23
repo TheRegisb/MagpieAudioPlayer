@@ -7,22 +7,39 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Tag list and their weight.
+ * Tags to be apply to a media selection. Cover "feel", "genre" and bpm.
+ */
 public class Tags implements Serializable {
     private static final long serialVersionUID = 1L;
     private List<Pair<String, Integer>> feel = new ArrayList<>();
     private List<Pair<String, Integer>> genre = new ArrayList<>();
     private int bpmTweak = 0;
 
+    /**
+     * Default constructor.
+     */
     public Tags() {
 
     }
 
+    /**
+     * Copy constructor.
+     *
+     * @param tags Instance to copy.
+     */
     public Tags(Tags tags) {
         feel = new ArrayList<>(tags.feel);
         genre = new ArrayList<>(tags.genre);
         bpmTweak = tags.bpmTweak;
     }
 
+    /**
+     * Invert tags weight.
+     *
+     * @return A copy of the instance's tags with their opposite weight.
+     */
     public Tags invert() {
         Tags inverse = new Tags(this);
 
@@ -36,6 +53,12 @@ public class Tags implements Serializable {
         return inverse;
     }
 
+    /**
+     * Add or update a "genre" tag.
+     * Add or update a "genre" tag then sort all tags on their weight first and name second.
+     * @param name Name of the tag.
+     * @param weight Weight of the tag. Positive for inclusion and negative for exclusion.
+     */
     public void addGenre(String name, int weight) {
         for (Pair<String, Integer> entry : this.genre) {
             if (entry.getKey().equals(name)) {
@@ -52,6 +75,12 @@ public class Tags implements Serializable {
         });
     }
 
+    /**
+     * Add or update a "feel" tag.
+     * Add or update a "feel" tag then sort all tags on their weight first and name second.
+     * @param name Name of the tag.
+     * @param weight Weight of the tag. Positive for inclusion and negative for exclusion.
+     */
     public void addFeel(String name, int weight) {
         for (Pair<String, Integer> entry : this.feel) {
             if (entry.getKey().equals(name)) {
@@ -68,26 +97,44 @@ public class Tags implements Serializable {
         });
     }
 
+    /**
+     * Adjust BPM preference.
+     * @param tweak BPM preference. Positive for high BPM and negative for low.
+     */
     public void tweakBpm(int tweak) {
         bpmTweak += tweak;
     }
 
-    public void setBpmTweak(int bpmWeight) {
-        bpmTweak = bpmWeight;
-    }
-
+    /**
+     * Get "genre" tags.
+     * @return List of weighted "genre" tags.
+     */
     public List<Pair<String, Integer>> getGenre() {
         return genre;
     }
 
+    /**
+     * Get "feel" tags.
+     * @return List of weighted "feel" tags.
+     */
     public List<Pair<String, Integer>> getFeel() {
         return feel;
     }
 
+    /**
+     * Get BPM tweak.
+     * @return BPM tweak. Positive for high BPM, negative for low.
+     */
     public int getBpmTweak() {
         return bpmTweak;
     }
 
+    /**
+     * Try to add a tags to its respective list on its name.
+     * @param tagLiteral Complete tag literal.
+     * @param weight Weight factor.
+     * @return (1) true if the tag understood or (2) false otherwise.
+     */
     public boolean parse(String tagLiteral, int weight) {
         boolean valid = true;
 
@@ -105,10 +152,19 @@ public class Tags implements Serializable {
         return valid;
     }
 
+    /**
+     * Query instance emptiness.
+     * @return (1) true of no "genre", "feel" or bpm tags have been applied or (2) false otherwise.
+     */
     public boolean areEmpty() {
         return genre.isEmpty() && feel.isEmpty() && bpmTweak == 0;
     }
 
+    /**
+     * Compare two tags.
+     * @param tags Instance to be compared with
+     * @return Equalities of the objects.
+     */
     public boolean equals(Tags tags) {
         if (this.genre.size() != tags.genre.size() // Check for equality in number of tags
                 || this.feel.size() != tags.feel.size()) {
@@ -127,6 +183,10 @@ public class Tags implements Serializable {
         return this.bpmTweak == tags.bpmTweak;
     }
 
+    /**
+     * Display all fields and value as human-readable string.
+     * @return A descriptive string.
+     */
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();

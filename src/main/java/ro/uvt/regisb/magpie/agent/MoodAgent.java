@@ -6,9 +6,19 @@ import jade.core.behaviours.CyclicBehaviour;
 import jade.lang.acl.ACLMessage;
 import ro.uvt.regisb.magpie.utils.C;
 
+/**
+ * Mood interpreter agent.
+ */
 public class MoodAgent extends Agent {
     private int previousMood = 0;
 
+    /**
+     * Agent setup.
+     * Interpret mood literal and notify PlayListAgent
+     * of its implications on the tags.
+     *
+     * @see PlaylistAgent
+     */
     @Override
     protected void setup() {
         // ACL messages handler

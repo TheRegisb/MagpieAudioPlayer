@@ -18,9 +18,17 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 
+/**
+ * Time slot agents.
+ * Bind a time slot to a set of tags.
+ */
 public class TimeAgent extends Agent {
     private List<TimeInterval> timeSlots = new ArrayList<>();
 
+    /**
+     * Agent setup.
+     * Setup ACL messages handlers, time slot monitoring and configuration restoration.
+     */
     @Override
     protected void setup() {
         // ACL messages handler
@@ -122,10 +130,22 @@ public class TimeAgent extends Agent {
         send(confRequest);
     }
 
+    /**
+     * Apply a configuration preset.
+     *
+     * @param conf Apply the time slots of a configuration preset.
+     * @see Configuration
+     */
     private void applyConfiguration(Configuration conf) {
         timeSlots.addAll(conf.getTimeIntervals());
     }
 
+    /**
+     * Notify the PlaylistAgent of the effects of entering or leaving a time slot.
+     *
+     * @param time    Attributes of the time slot.
+     * @param deleted Is the time slot being exited.
+     */
     private void notifyPlaylistAgent(TimeInterval time, boolean deleted) {
         try {
             ACLMessage msg = new ACLMessage(ACLMessage.PROPOSE);
