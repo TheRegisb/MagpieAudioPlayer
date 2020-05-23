@@ -1,0 +1,123 @@
+Project title: Magpie Audio Player
+MAS Platform: JADE
+Java: 11 or greater
+External dependencies: Defined in project's Maven POM.
+
+Quick description:
+Visual audio player that can adapt its playlist suggestion by taking
+in account the user mood, time of the day and processes running on the
+system; entirely configurable by the user.
+Rely on an external, curated media source to play music.
+
+Problem:
+How to automatically adapt the music suggestion of an audio player to
+suit the taste of its user.
+
+Solution:
+Ask the user to configure the expected suggestion behaviour once and
+let the player apply these rules when its environment is changing.
+
+Method:
+The player is separated in seven distinct agents:
+ - The Player agent, responsible of the UI and the passing of user
+ inputs to other agent
+ 
+ - The Playlist agent, responsible for acquiring more medias while
+ taking in account all suggestion and constrains raised by the other
+ agents
+ 
+ - The Mood agent, responsible for interpreting a mood change from the
+   user into a music preferences constrains
+   
+ - The Processes agent, responsible for monitoring the system's running
+   processes and generating preferences constrains from the active and
+   monitored processes
+   
+ - The Time agent, responsible for generating preferences constrains
+   from the user defined time slot and their effects
+   
+ - The Preferences agents, responsible for storing and restoring the
+   audio player configuration between executions and runtime
+   modification
+   
+ - The Content Manager agent, responsible of connecting to a remote
+   media source and retrieving content when required
+
+This architecture allows each agent to be dedicated to a single
+goal. The interaction of agent to each other solves the global problem
+stated above.
+
+Each agent communicate to each other exclusively using message passing
+or simple discussion. No shared memory is used between the agents.
+
+When complex information need to be exchanged, object serialization is
+used to transfert object from one agent to another over plain text
+communication bus. The objets are serialized using standard Java
+utilities first then to Base64 to prevent possible data corruption.
+
+This is done to allow possible container decoupling, allowing some
+agents to be on the local machine while other migrates to a dedicated
+server. This project, however, does not take advantage of this
+opportunity and remain on a single local container.
+
+To generate preferences constrains, each agent rely on a predefined
+dictionary of tags, grouped as "genre", "feel" or "bpm". A single
+constrain is thus composed of tag name, category and weight. A positive
+weight means the inclusion of the tag in the next playlist expansion
+request. A negative weight means its exclusion.
+
+The audio player start with no tracks ready and request more tracks
+when there is one or less music left in the queue. On such request,
+the PlaylistAgent gather all constrains given by the other agents
+to generate the media filter. This filter is then send to the Content
+Manager to transform it into a valid content download request to the
+remote media source. The new media are cached locally and are sent
+back to the PlayerAgent.
+
+Because of time constrains, and due to not being the focus of the
+project, a single type of remote media source is supported: local
+SQLite database storing the tags of locally stored music file. On
+"download", the path of these files, selected on their tags, are sent
+to the audio player.
+
+Result:
+Because of its subjective nature and its narrow application, the
+results of the use of this application cannot be formally defined.
+From personal experience, after the initial setup phase, I had little
+to no interaction with the player itself as tracks played and
+downloaded automatically over time.
+I believe the mediation process, despite its limited scope, is
+reliable enough for its intended purpose.
+
+Usage:
+The project can be compiled into a standalone JAR file using Maven:
+`mvn clean package`
+and use the resulting "with-dependencies" JAR file.
+A binary release is available at: $$
+
+Alternatively, the PlayerAgent can be used to boot the entire
+application using Jade.Boot after the project compilation:
+`java -cp lib\jade.jar jade.Boot -gui
+  magpie_player:ro.uvt.regisb.magpie.agent.PlayerAgent`
+
+In order to listen to music, and given the current constraints, music
+files and a database must be provided in the same folder as the
+application.
+
+A complete working example including a binary release, audio files and
+their dedicated database is available here
+https://mega.nz/file/AA8BSCJC#0Xddb0gbVK5sS616muRhiNyDAejI0XfXloJQW2EYQOQ
+Decompress all files into the same folder and execute the JAR.
+
+Both the standalone and the PlayerAgent take two optional argument:
+ 0: The remote media source (default: "audiosample.sqlite.db")
+ 1: The source adapter (default: "local")
+The arguments must be given in order. A missing argument is replaced
+with its default value.
+
+Misc:
+ Development environment:
+  - Windows 10 x64
+  - JDK 14
+  - IntelliJ 2019.2.2
+ The program was not tested under other platforms.
